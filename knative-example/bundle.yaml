@@ -1,0 +1,38 @@
+bundle: kubernetes
+applications:
+  minio:
+    charm: minio
+    channel: stable
+    revision: 57
+    resources:
+      oci-image: 338
+    scale: 1
+    constraints: arch=amd64
+  mlflow-db:
+    charm: cs:~charmed-osm/mariadb-k8s
+    channel: stable
+    revision: 35
+    series: kubernetes
+    scale: 1
+    constraints: arch=amd64
+  mlflow-server:
+    charm: mlflow-server
+    channel: stable
+    revision: 32
+    resources:
+      oci-image: 18
+    scale: 1
+    constraints: arch=amd64
+  seldon-controller-manager:
+    charm: seldon-core
+    channel: stable
+    revision: 52
+    resources:
+      oci-image: 152
+    scale: 1
+    constraints: arch=amd64
+relations:
+- - mlflow-server:db
+  - mlflow-db:mysql
+- - mlflow-server:object-storage
+  - minio:object-storage

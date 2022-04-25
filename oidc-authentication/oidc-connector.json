@@ -1,0 +1,19 @@
+[
+  {
+    "id": "keycloak",
+    "name": "keycloak",
+    "type": "oidc",
+    "config": {
+      "issuer": "http://10.1.100.53:8080/realms/master",
+      "clientID": "ckf",
+      "clientSecret": "YeQqPZGeYav7NevRDxEuNpLJ1cFjjfmy",
+      "redirectURI": "http://10.64.140.43.nip.io/dex/callback",
+      "userNameKey": "preferred_username",
+      "scopes": [
+        "profile",
+        "email",
+        "roles"
+      ]
+    }
+  }
+]

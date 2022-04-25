@@ -1,0 +1,23 @@
+apiVersion: machinelearning.seldon.io/v1
+kind: SeldonDeployment
+metadata:
+  name: seldon-model
+spec:
+  name: test-deployment
+  predictors:
+  - componentSpecs:
+    - spec:
+        containers:
+        - image: seldonio/mock_classifier:1.13.1
+          name: classifier
+    graph:
+      children: []
+      endpoint:
+        type: REST
+      name: classifier
+      type: MODEL
+      logger:
+        url: http://broker-ingress.knative-eventing.svc.cluster.local/data-drift/bpk-broker
+        mode: request
+    name: example
+    replicas: 1

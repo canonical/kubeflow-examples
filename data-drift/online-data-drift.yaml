@@ -1,0 +1,64 @@
+apiVersion: eventing.knative.dev/v1
+kind: Broker
+metadata:
+  name: wine-inference-requests
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: data-drift-detection
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/min-scale: "1"
+    spec:
+      containers:
+        - image: bponieckiklotz/knative-data-drift@sha256:ca7bd9193fed32b7d6b80a2ba0e513a6a1d1a8661c2868b888da5b60c96da8b6
+          env:
+            - name: BROKER_URL
+              value: http://broker-ingress.knative-eventing.svc.cluster.local/default/wine-inference-requests
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: wine-data-drift-detection-trigger
+spec:
+  broker: wine-inference-requests
+  filter:
+    attributes:
+      type: io.seldon.serving.inference.request
+  subscriber:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: data-drift-detection
+---
+#debug only
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: wine-debug
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/min-scale: "1"
+    spec:
+      containers:
+        - image: ruromero/cloudevents-player:latest
+          env:
+            - name: BROKER_URL
+              value: http://broker-ingress.knative-eventing.svc.cluster.local/default/wine-inference-requests
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: wine-debug-trigger
+spec:
+  broker: wine-inference-requests
+  subscriber:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: wine-debug

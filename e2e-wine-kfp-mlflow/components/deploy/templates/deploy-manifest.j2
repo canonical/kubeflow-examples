@@ -1,0 +1,39 @@
+apiVersion: machinelearning.seldon.io/v1alpha2
+kind: SeldonDeployment
+metadata:
+  name: mlflow
+spec:
+  name: wines
+  predictors:
+  - componentSpecs:
+    - spec:
+        containers:
+        - name: classifier
+          image: seldonio/mlflowserver:1.14.0-dev
+          imagePullPolicy: Always
+          livenessProbe:
+            initialDelaySeconds: 80
+            failureThreshold: 200
+            periodSeconds: 5
+            successThreshold: 1
+            httpGet:
+              path: /health/ping
+              port: http
+              scheme: HTTP
+          readinessProbe:
+            initialDelaySeconds: 80
+            failureThreshold: 200
+            periodSeconds: 5
+            successThreshold: 1
+            httpGet:
+              path: /health/ping
+              port: http
+              scheme: HTTP
+    graph:
+      children: []
+      implementation: MLFLOW_SERVER
+      modelUri: {{ model_uri }}
+      envSecretRefName: seldon-init-container-secret
+      name: classifier
+    name: wine-super-model
+    replicas: 1

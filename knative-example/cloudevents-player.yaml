@@ -1,0 +1,33 @@
+apiVersion: eventing.knative.dev/v1
+kind: Broker
+metadata:
+ name: bpk-broker
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: cloudevents-player
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/min-scale: "1"
+    spec:
+      containers:
+        - image: ruromero/cloudevents-player:latest
+          env:
+            - name: BROKER_URL
+              value: http://broker-ingress.knative-eventing.svc.cluster.local/data-drift/bpk-broker
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: bpk-broker-trigger
+  namespace: data-drift
+spec:
+  broker: bpk-broker
+  subscriber:
+    ref:
+     apiVersion: v1
+     kind: Service
+     name: cloudevents-player
