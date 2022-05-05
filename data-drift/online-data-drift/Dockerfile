@@ -1,8 +1,11 @@
 FROM python:3.9-slim
 
-COPY requirements.txt .
+RUN apt-get update
+RUN apt-get install ffmpeg libsm6 libxext6  -y
+
+COPY model/requirements.txt .
 RUN python3 -m pip install -r \
-    requirements.txt --quiet --no-cache-dir \
+    requirements.txt --no-cache-dir \
     && rm -f requirements.txt
 
 ADD . /workspace

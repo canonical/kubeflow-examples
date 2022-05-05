@@ -1,21 +1,48 @@
-# Data Drift
+# Data Drift - prepare environment
 
-Deploy bundle
+## Tools setup
 
-````
-juju deploy ./kubeflow-examples/data-drift/bundle.yaml
-````
-
-Deploy knative
+Install microk8s
 
 ```
-kubectl config set-context --current --namespace=default
-kubectl apply -f https://github.com/knative/operator/releases/download/knative-v1.3.1/operator.yaml
+sudo snap install microk8s --classic --channel=1.21/stable
+
+#change username
+sudo usermod -a -G microk8s ubuntu
+sudo chown -f -R ubuntu ~/.kube
+newgrp microk8s
+
+sudo microk8s enable dns storage ingress registry rbac metallb:10.64.140.43-10.64.140.49,192.168.0.105-192.168.0.111
 ```
+
+Install and bootstrap juju
+
+```
+sudo snap install juju --classic
+juju bootstrap microk8s micro
+```
+
+Install kubectl
+
+```
+sudo snap install kubectl --classic
+microk8s config > ~/.kube/config
+```
+
+Install kn CLI
+
+```
+#works for linux only
+wget https://github.com/knative/client/releases/download/knative-v1.3.1/kn-linux-amd64 -O kn
+chmod +x kn
+sudo mv kn /usr/local/bin
+```
+
+## Install KNative
 
 Install istio
 
-Only first time
+First time only
 
 ```
 #optional
@@ -24,12 +51,25 @@ export PATH=$PATH:$HOME/.istioctl/bin
 istioctl x precheck
 ```
 
-Required
+Install istio using istioctl
 
 ```
 #install
 istioctl install -y
 kubectl get svc -nistio-system
+```
+
+Deploy knative operator
+
+```
+kubectl config set-context --current --namespace=default
+kubectl apply -f https://github.com/knative/operator/releases/download/knative-v1.3.1/operator.yaml
+```
+
+Deploy knative serving
+
+```
+kubectl apply -f https://raw.githubusercontent.com/Barteus/kubeflow-examples/main/knative-example/crd-serving.yaml
 ```
 
 DNS
@@ -38,15 +78,29 @@ DNS
 kubectl apply -f https://github.com/knative/serving/releases/download/knative-v1.3.0/serving-default-domain.yaml
 ```
 
-## Install eventing
+Istio config
+
+```
+kubectl apply -f https://raw.githubusercontent.com/Barteus/kubeflow-examples/main/knative-example/istio-config.yaml
+```
 
 Install eventing
 
 ```
-kubectl apply -f crd-eventing.yaml
+kubectl apply -f https://raw.githubusercontent.com/Barteus/kubeflow-examples/main/knative-example/crd-eventing.yaml
 ```
 
+## Install Seldon, Minio, MLFlow
+
+Deploy bundle
+
+````
+juju add-model kubeflow
+juju deploy ./kubeflow-examples/data-drift/bundle.yaml
+````
+
 # Data drift detection
+
 ## Train datadrift model
 
 Run notebook `data-drift-training.ipynb`. Take the model URI - you will need it
