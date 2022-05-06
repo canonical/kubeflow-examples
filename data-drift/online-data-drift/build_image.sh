@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.2-dev
+VERSION=0.3-dev
 REPO=bponieckiklotz/knative-data-drift
 
 docker build . -t $REPO:$VERSION
