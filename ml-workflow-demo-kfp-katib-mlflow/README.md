@@ -125,7 +125,7 @@ Katib code
 TF code
 ```
 
-10. Define a complete pipeline that consists of all steps created earlier.
+10. Define a complete pipeline that consists of all steps created earlier. Note that name of the pipeline must be uqinue. If there was another pipeline with the same name within same namespace defined previously either change the name of current pipeline or delete the older pipeline from the namespace.
 ```
 Pipeline code
 ```
