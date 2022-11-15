@@ -4,6 +4,8 @@
 
 ![Diagram](./images/ML-Workflow-Demo-Diagram.png)
 
+`images/` directory contains all related screenshorts and diagrams. `resources/` directory contains Jupyter notebook containing all steps in this guide, `Dockerfile` and Python script for training image used in this guide.
+
 ## Prerequisites
 
 - Deployed Kubeflow instance and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart
