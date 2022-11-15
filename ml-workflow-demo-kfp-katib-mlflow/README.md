@@ -2,3 +2,4 @@
 
 ## Overview
 
+![Diagram](./images/ML-Workflow-Demo-Diagram.png)
