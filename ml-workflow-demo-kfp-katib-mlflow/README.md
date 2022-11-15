@@ -31,3 +31,41 @@ The following are the instructions that outline the workflow process.
 5. Create a Jupyter notebook to hold code that will specify the Kubeflow pipeline.
 
 ![NewJupyterNotebook](./images/ML-Workflow-NewJupyterNotebook-diag.png)
+
+NOTE: The following Jupyter notebook contains all the steps outlined below: [ml-workflow-demo-kfp-katib-mlflow,ipynb](./(ml-workflow-demo-kfp-katib-mlflow,ipynb)
+
+6. To setup environment add the following cells to the newly created Jupyter notebook:
+```
+Setup code goes here
+```
+
+7. Create a pipeline step that will do data ingestion and cleanup. Setup transfer of clean data to the next step.
+```
+Data ingest and cleanup
+```
+
+8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image docker.io/misohu/kubeflow-training:latest. For more details on the training container image refer to Appendix A of this guide.
+```
+Katib code
+```
+
+9. Create the last step of the pipeline that will do model training using Tensorflow based on Katib tuning results.
+```
+TF code
+```
+
+10. Define a complete pipeline that consists of all steps created earlier.
+```
+Pipeline code
+```
+
+11. Execute pipeline.
+```
+Pipeline exec code
+```
+
+12. Observe run details.
+
+![Run](./images/ML-Workflow-RunDetails.png)
+
+13. Verify that model is stored in MLFlow model registry.
