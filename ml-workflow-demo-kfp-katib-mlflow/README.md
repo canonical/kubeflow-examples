@@ -425,7 +425,7 @@ def demo_pipeline(name=name, namespace=namespace):
         convert_katib_results_op = components.func_to_container_op(convert_katib_results)
         best_katib_model_op = convert_katib_results_op(katib_op.output)
 
-        # Step 5: Run training with TFJob.
+        # Step 5: Run training with TFJob. Model will be stored into ML Flow model registry (done inside container image).
         tfjob_op = create_tfjob_op(name, namespace, best_katib_model_op.output, s3_bucket, key)
 ```
 
