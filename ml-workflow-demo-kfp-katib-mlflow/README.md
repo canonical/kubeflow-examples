@@ -382,7 +382,7 @@ def create_tfjob_op(tfjob_name, tfjob_namespace, model, bucket, key):
     return op
 ```
 
-10. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be uqinue. If there was previously defined a pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
+10. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be uqinue. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
 
 ```
 name = "demo-pipeline"
