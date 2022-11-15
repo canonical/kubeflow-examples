@@ -72,7 +72,7 @@ from kubeflow.katib import V1beta1TrialTemplate
 from kubeflow.katib import V1beta1TrialParameterSpec
 ```
 
-7. Create a pipeline step that will do data ingestion and cleanup. Setup transfer of clean data to the next step.
+7. Create a pipeline steps that will do data ingestion and cleanup. Setup transfer of clean data to the next step using S3 bucket.
 
 ```
 # Data ingest operation.
@@ -127,7 +127,7 @@ def clean_arff_data(
     return "Done"
 ```
 
-8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image docker.io/misohu/kubeflow-training:latest. For more details on the training container image refer to Appendix A of this guide.
+8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to Appendix A of this guide.
 
 ```
 # Katib hyperparameter tuning operation.
