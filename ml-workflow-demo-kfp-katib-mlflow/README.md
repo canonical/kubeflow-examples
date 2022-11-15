@@ -2,9 +2,20 @@
 
 ## Overview
 
+This guide intended to introduce end users to complete ML workflow using Kubeflow. In particular, examples of Kubeflow pipeline using Katib hyperparameter tuning and ML Flow model registry are presented along with some common pipeline steps interfaces such as S3.
+
+The following diagram outlines ML workflow presented in this guide. Major pipeline steps include:
+- Ingestion of dataset.
+- Cleaning up the dataset.
+- Store of cleaned data to S3 bucket.
+- Hyperparameter tuning using Katib and Tensorflow training container image (with ML Flow store functionality).
+- Converting Katib results to streamlined format.
+- Model training using tuning results.
+- Storing the resulting production model to ML Flow model registry.
+
 ![Diagram](./images/ML-Workflow-Demo-Diagram.png)
 
-`images/` directory contains all related screenshorts and diagrams. `resources/` directory contains Jupyter notebook containing all steps in this guide, `Dockerfile` and Python script for training image used in this guide.
+This repository contains all artifacts needed to support this guide. `images/` directory contains all related screenshorts and diagrams. `resources/` directory contains Jupyter notebook containing all steps in this guide, `Dockerfile` and Python script for training image used in this guide.
 
 ## Prerequisites
 
