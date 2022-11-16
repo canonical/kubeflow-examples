@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide intended to introduce end users to complete ML workflow using Kubeflow. In particular, examples of Kubeflow pipeline using Katib hyperparameter tuning and ML Flow model registry are presented along with some common pipeline steps interfaces such as S3.
+This guide intended to introduce end users to complete ML workflow using Kubeflow. In particular, examples of Kubeflow pipeline using Katib hyperparameter tuning and ML Flow model registry are presented along with some common pipeline steps and interfaces such as S3.
 
 The following diagram outlines ML workflow presented in this guide. Major pipeline steps include:
 - Ingestion of dataset.
