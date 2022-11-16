@@ -45,7 +45,7 @@ The following are the instructions that outline the workflow process.
 
 ![NewJupyterNotebook](./images/ML-Workflow-NewJupyterNotebook-diag.png)
 
-NOTE: The following Jupyter notebook contains all the steps outlined below: [ml-workflow-demo-kfp-katib-mlflow,ipynb](./(ml-workflow-demo-kfp-katib-mlflow,ipynb)
+NOTE: The following Jupyter notebook contains all the steps outlined below: [ml-workflow-demo-kfp-katib-mlflow.ipynb](./resources/ml-workflow-demo-kfp-katib-mlflow.ipynb)
 
 6. To setup environment add the following cells to the newly created Jupyter notebook:
 
