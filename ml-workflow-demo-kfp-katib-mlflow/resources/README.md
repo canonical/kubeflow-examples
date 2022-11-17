@@ -3,10 +3,8 @@
 ## Files
 
 - `ml-workflow-demo-kfp-katib-mlflow.ipynb` Jupyter notebook with all pipeline steps of the demo, all graphics, and diagrams.
-- `ml-workflow-demo-kfp-katib-mlflow.code.ipynb` Code-only Jupyter notebook with graphics, text, and diagrams removed. It can be uploaded to server and executed.
-- `Dockerfile` Specifies Docker image that was used with this demo.
-- `ml-workflow-demo-tf-train-model.py` Python script that was used to build image for this demo.
-- `requirements.txt` Dependencies for this demo.
+- `resources/Dockerfile` Specifies Docker image that was used with this demo.
+- `resources/requirements.txt` Dependencies for this demo.
 
 ## Build Tensorflow training Docker image
 
