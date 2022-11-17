@@ -39,7 +39,7 @@ To convert Jupyter notebook to markdown guide:
 jupyter nbconvert --to markdown ml-workflow-demo-kfp-katib-mlflow.ipynb
 ```
 
-Markdown file will be created: `ml-workflow-demo-kfp-katib-mlflow.md`. This markdown version should be used as a guide. `README.md` in main directory is produced this way, eg. `jupyter nbconvert --to markdown ml-workflow-demo-kfp-katib-mlflow.ipynb --output ../README.md`
+Markdown file will be created: `ml-workflow-demo-kfp-katib-mlflow.md`. This markdown version should be used as a guide. `README.md` in main directory is produced this way, eg. `jupyter nbconvert --to markdown ml-workflow-demo-kfp-katib-mlflow.ipynb --output README.md`
 
 ## Convert Jupyter notebook to code-only notebook
 
