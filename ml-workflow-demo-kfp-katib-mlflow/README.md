@@ -1,3 +1,4 @@
+
 # ML Workflow Demo: Kubeflow - Katib - ML Flow
 
 ## Overview
@@ -49,7 +50,8 @@ NOTE: The following Jupyter notebook contains all the steps outlined below: [ml-
 
 6. To setup environment add the following cells to the newly created Jupyter notebook:
 
-```
+
+```python
 !pip install kfp==1.8.12
 !pip install kubeflow-katib==0.13.0
 
@@ -74,14 +76,17 @@ from kubeflow.katib import V1beta1TrialParameterSpec
 
 7. Create a pipeline steps that will do data ingestion and cleanup. Setup transfer of clean data to the next step using S3 bucket.
 
-```
+
+```python
 # Data ingest operation.
 # Output is in outputs['data']
 ingest_data_op = components.load_component_from_url(
 'https://raw.githubusercontent.com/kubeflow/pipelines/master/components/contrib/web/Download/component.yaml'
 )
 ```
-```
+
+
+```python
 # Data clean up operation.
 def clean_arff_data(
     bucket,
@@ -120,7 +125,10 @@ def clean_arff_data(
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
         aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
     )
-    s3_resouce.create_bucket(bucket)
+    check_bucket = s3_resource.Bucket(bucket)
+    if not check_bucket.creation_date:
+        # bucket does not exist, create it
+        s3_resource.create_bucket(Bucket=bucket)
     print(f"Saving CSV of shape {df_clean.shape} to s3")
     s3_resource.Object(bucket, key).put(Body=csv_buffer.getvalue())
 
@@ -129,7 +137,8 @@ def clean_arff_data(
 
 8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to [resources README](./resources/README.md) of this guide.
 
-```
+
+```python
 # Katib hyperparameter tuning operation.
 def create_katib_experiment_op(experiment_name, experiment_namespace, bucket, key):
     # Trial count specification.
@@ -161,6 +170,7 @@ def create_katib_experiment_op(experiment_name, experiment_namespace, bucket, ke
             ),
         )
     ]
+
     # Experiment trial template.
     trial_spec = {
         "apiVersion": "kubeflow.org/v1",
@@ -276,7 +286,9 @@ def create_katib_experiment_op(experiment_name, experiment_namespace, bucket, ke
 
     return op
 ```
-```
+
+
+```python
 # Convert Katib experiment hyperparameter results to arguments in string format.
 def convert_katib_results(katib_results) -> str:
     import json
@@ -294,7 +306,8 @@ def convert_katib_results(katib_results) -> str:
 
 9. Create the last step of the pipeline that will do model training using Tensorflow based on Katib tuning results.
 
-```
+
+```python
 # Tensorflow job operation.
 def create_tfjob_op(tfjob_name, tfjob_namespace, model, bucket, key):
     tf_model = str(model)
@@ -384,7 +397,8 @@ def create_tfjob_op(tfjob_name, tfjob_namespace, model, bucket, key):
 
 10. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be uqinue. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
 
-```
+
+```python
 name = "demo-pipeline"
 namespace = "admin"
 s3_bucket = "demo-dataset"
@@ -425,13 +439,15 @@ def demo_pipeline(name=name, namespace=namespace):
         convert_katib_results_op = components.func_to_container_op(convert_katib_results)
         best_katib_model_op = convert_katib_results_op(katib_op.output)
 
-        # Step 5: Run training with TFJob. Model will be stored into ML Flow model registry (done inside container image).
+        # Step 5: Run training with TFJob. Model will be stored into ML Flow model registry
+        # (done inside container image).
         tfjob_op = create_tfjob_op(name, namespace, best_katib_model_op.output, s3_bucket, key)
 ```
 
 11. Execute pipeline.
 
-```
+
+```python
 kfp_client = Client()
 run_id = kfp_client.create_run_from_pipeline_func(
         demo_pipeline,
@@ -452,3 +468,5 @@ print(f"Run ID: {run_id}")
 ![MLFlow](./images/ML-Workflow-MLFLowRegistry.png)
 
 14. Now model is ready to be deployed!
+
+<!--- #Execute-Pipeline --->
