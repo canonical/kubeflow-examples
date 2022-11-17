@@ -29,3 +29,12 @@ If modifying Jupyter notebook that describes pipeline for this demo `ml-workflow
 ```
 jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace ml-workflow-demo-tf-train-model.py
 ```
+
+## Convert Jupyter notebook into markdown guide
+
+To conver Jupyter playbook into markdown guide:
+```
+jupyter nbconvert --to markdown doc-ml-workflow-demo-kfp-katib-mlflow.ipynb
+```
+
+Markdown file will be created: `doc-ml-workflow-demo-kfp-katib-mlflow.md`. This markdown version should be used as a guide.
