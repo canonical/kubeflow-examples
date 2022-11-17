@@ -21,3 +21,11 @@ Push image to Docker registry:
 ```
 
 Replace image URI in pipeline.
+
+## Modifying Jupyter notebook
+
+If modifying Jupyter notebook that describes pipeline for this demo `ml-workflow-demo-tf-train-model.py`, before commit run the following command to remove all output of the execution:
+
+```
+jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace ml-workflow-demo-tf-train-model.py
+```
