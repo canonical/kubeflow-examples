@@ -27,7 +27,7 @@ Replace image URI in pipeline.
 If modifying Jupyter notebook that describes pipeline for this demo `ml-workflow-demo-tf-train-model.ipnyb`, before commit run the following command to remove all output of the execution:
 
 ```
-jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace ml-workflow-demo-tf-train-model.ipynb`
+jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace ml-workflow-demo-tf-train-model.ipynb
 ```
 
 ## Convert Jupyter notebook into markdown guide
