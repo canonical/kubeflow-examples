@@ -132,11 +132,15 @@ Pipeline code
 
 11. Execute pipeline.
 ```
-Pipeline exec code
+@@include[ml-workflow-demo-kfp-katib-mlflow.ipynb](resources/ml-workflow-demo-kfp-katib-mlflow.ipynb) { #Execute-Pipeline }
 ```
 
-12. Observe run details.
+12. Observe run details by selecting **Run details** link.
 
 ![Run](./images/ML-Workflow-RunDetails.png)
 
-13. Verify that model is stored in MLFlow model registry.
+![Pipeline](./images/ML-Workflow-Pipeline.png)
+
+13. Verify that model is stored in MLFlow model registry by navigating to ML Flow dashboard: http://10.64.140.43.nip.io/mlflow/#/
+
+![MLFlow](./images/ML-Workflow-MLFLowRegistry.png)
