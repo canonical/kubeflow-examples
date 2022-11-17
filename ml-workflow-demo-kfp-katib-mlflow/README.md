@@ -127,7 +127,7 @@ def clean_arff_data(
     return "Done"
 ```
 
-8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to Appendix A of this guide.
+8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to [resources README](./resources/README.md) of this guide.
 
 ```
 # Katib hyperparameter tuning operation.
