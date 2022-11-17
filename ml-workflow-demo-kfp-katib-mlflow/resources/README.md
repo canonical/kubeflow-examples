@@ -30,6 +30,8 @@ If modifying Jupyter notebook that describes pipeline for this demo `ml-workflow
 jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace ml-workflow-demo-tf-train-model.ipynb
 ```
 
+When updating Jupyter notebook add tags to text or graphics cells. This way they will be filtered out when generating code-only notebook.
+
 ## Convert Jupyter notebook into markdown guide
 
 To convert Jupyter notebook to markdown guide:
