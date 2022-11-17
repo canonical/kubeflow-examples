@@ -26,14 +26,14 @@ This repository contains all artifacts needed to support this guide. `images/` d
 ## Instructions
 The following are the instructions that outline the workflow process.
 
-1. Access Kubeflow dashboard.
+1. Access Kubeflow dashboard via URL, eg http://10.64.140.43.nip.io/
 
 2. Navigate to Notebooks.
 
 3. Create a new notebook.
   a. Fill in name
   b. Select Tensorflow image `jupyter-tensorflow-full:v1.6.0`
-  c. Select minimum configuration: 4 CPUs and 16GB of RAM
+  c. Select minimum configuration: 1 CPU and 4GB of RAM
 
 ![NotebookCreate](./images/ML-Workflow-NotebookCreate-diag.png)
 
@@ -432,7 +432,13 @@ def demo_pipeline(name=name, namespace=namespace):
 11. Execute pipeline.
 
 ```
-@@include[ml-workflow-demo-kfp-katib-mlflow.ipynb](resources/ml-workflow-demo-kfp-katib-mlflow.ipynb) { #Execute-Pipeline }
+kfp_client = Client()
+run_id = kfp_client.create_run_from_pipeline_func(
+        demo_pipeline,
+        namespace=namespace,
+        arguments={},
+    ).run_id
+print(f"Run ID: {run_id}")
 ```
 
 12. Observe run details by selecting **Run details** link.
@@ -441,6 +447,8 @@ def demo_pipeline(name=name, namespace=namespace):
 
 ![Pipeline](./images/ML-Workflow-Pipeline.png)
 
-13. Verify that model is stored in MLFlow model registry by navigating to ML Flow dashboard: http://10.64.140.43.nip.io/mlflow/#/
+13. Verify that model is stored in MLFlow model registry by navigating to ML Flow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
 
 ![MLFlow](./images/ML-Workflow-MLFLowRegistry.png)
+
+14. Now model is ready to be deployed!
