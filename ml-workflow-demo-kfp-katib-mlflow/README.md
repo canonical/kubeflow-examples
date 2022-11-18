@@ -468,5 +468,3 @@ print(f"Run ID: {run_id}")
 ![MLFlow](./images/ML-Workflow-MLFLowRegistry.png)
 
 14. Now model is ready to be deployed!
-
-<!--- #Execute-Pipeline --->
