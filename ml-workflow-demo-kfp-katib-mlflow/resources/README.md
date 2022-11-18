@@ -30,7 +30,7 @@ If modifying Jupyter notebook that describes pipeline for this demo `ml-workflow
 jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace ml-workflow-demo-tf-train-model.ipynb
 ```
 
-When updating Jupyter notebook add tags to text or graphics cells. This way they will be filtered out when generating code-only notebook.
+When updating Jupyter notebook add `text` tag to text or graphics cells. This way they will be filtered out when generating code-only notebook.
 
 ## Convert Jupyter notebook into markdown guide
 
@@ -43,7 +43,7 @@ Markdown file will be created: `ml-workflow-demo-kfp-katib-mlflow.md`. This mark
 
 ## Convert Jupyter notebook to code-only notebook
 
-To convert Jupyter notebook to code-only notebook that can be uploaded and executed:
+To convert Jupyter notebook to code-only notebook that contains only code with graphics and text removed:
 ```
 jupyter nbconvert --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags="{'text'}" --to notebook ml-workflow-demo-kfp-katib-mlflow.ipynb --output ml-workflow-demo-kfp-katib-mlflow.code.ipynb
 ```
