@@ -1,27 +1,26 @@
-
-# ML Workflow Demo: Kubeflow - Katib - ML Flow
+# ML Workflow Demo: Kubeflow - Katib - MLflow
 
 ## Overview
 
-This guide intended to introduce end users to complete ML workflow using Kubeflow. In particular, examples of Kubeflow pipeline using Katib hyperparameter tuning and ML Flow model registry are presented along with some common pipeline steps and interfaces such as S3.
+This guide intended to introduce end users to complete a ML workflow using Kubeflow. In particular, examples of Kubeflow pipelines using Katib hyperparameter tuning and MLflow model registry are presented along with some common pipeline steps and interfaces such as S3.
 
 The following diagram outlines ML workflow presented in this guide. Major pipeline steps include:
 - Ingestion of dataset.
 - Cleaning up the dataset.
 - Store of cleaned data to S3 bucket.
-- Hyperparameter tuning using Katib and Tensorflow training container image (with ML Flow store functionality).
+- Hyperparameter tuning using Katib and Tensorflow training container image (with MLflow store functionality).
 - Converting Katib results to streamlined format.
-- Model training using tuning results.
-- Storing the resulting production model to ML Flow model registry.
+- Model training using best parameters from tuning.
+- Storing the resulting production model to MLflow model registry.
 
-![Diagram](./images/ML-Workflow-Demo-Diagram.png)
+![Diagram](/images/ML-Workflow-Demo-Diagram.png)
 
 This repository contains all artifacts needed to support this guide. `images/` directory contains all related screenshorts and diagrams. `resources/` directory contains Jupyter notebook containing all steps in this guide, `Dockerfile` and Python script for training image used in this guide.
 
 ## Prerequisites
 
-- Deployed Kubeflow instance and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart
-- Deployed MLFlow. For deployment of Charmed MLFlow refer to https://charmed-kubeflow.io/docs/mlflow
+- Deployed Kubeflow instance including Katib, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart (note: the `kubeflow-lite` bundle does not include Katib - `juju deploy kubeflow --trust` instead when you get to that step)
+- Deployed MLflow. For deployment of Charmed MLflow refer to https://charmed-kubeflow.io/docs/mlflow
 - Familiarity with Python, Docker, Jupyter notebooks.
 
 ## Instructions
@@ -74,16 +73,12 @@ from kubeflow.katib import V1beta1TrialTemplate
 from kubeflow.katib import V1beta1TrialParameterSpec
 ```
 
-7. Create a pipeline steps that will do data ingestion and cleanup. Setup transfer of clean data to the next step using S3 bucket.
+7. Create pipeline steps that will do data ingestion and cleanup. Setup transfer of clean data to the next step using S3 bucket.
 
+Cleaning our data is a process really specific to our problem.  We know what we want to do and can do it in Python, but we need to get that logic into a step in our Kubeflow Pipeline.  Full documentation on the different ways to write and reuse Pipeline steps is [in the upstream docs](), but we include a few examples below. 
 
-```python
-# Data ingest operation.
-# Output is in outputs['data']
-ingest_data_op = components.load_component_from_url(
-'https://raw.githubusercontent.com/kubeflow/pipelines/master/components/contrib/web/Download/component.yaml'
-)
-```
+One way to do this is called a lightweight pipeline step, where we write a self-contained python function that does what we want and Kubeflow Pipelines helps package it for us.  For example, we can write:
+
 
 
 ```python
@@ -92,7 +87,7 @@ def clean_arff_data(
     bucket,
     key,
     input_file: components.InputPath(str)
-) -> str:
+):
     import pandas as pd
     import boto3
     import os
@@ -106,17 +101,19 @@ def clean_arff_data(
     df_data = pd.DataFrame(raw_data[0].copy())
     print(f"Loaded data file of shape {df_data.shape}")
 
+    print(f"Cleaning the data")
+    
     # Convert target column to numeric.
     df_data.iloc[:, -1] = pd.get_dummies(df_data['CHURN']).iloc[:, 0]
 
     # Remove missing values.
     df_clean = df_data.dropna(axis=1)
-    df_clean.loc[:,'CHURN']=pd.get_dummies(df_data['CHURN']).iloc[:, 0]
+    df_clean.loc[:,'CHURN'] = pd.get_dummies(df_data['CHURN']).iloc[:, 0]
 
     # Get rid of non-numeric columns.
     df_clean = df_clean.select_dtypes(exclude='object')
 
-    # Save results to S3
+    print(f"Saving the cleaned data to S3")
     csv_buffer = StringIO()
     df_clean.to_csv(csv_buffer)
     s3_resource = boto3.resource(
@@ -131,11 +128,44 @@ def clean_arff_data(
         s3_resource.create_bucket(Bucket=bucket)
     print(f"Saving CSV of shape {df_clean.shape} to s3")
     s3_resource.Object(bucket, key).put(Body=csv_buffer.getvalue())
-
-    return "Done"
 ```
 
-8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to [resources README](./resources/README.md) of this guide.
+which:
+* receives the local path to a data file as an argument and loads that file (how this file **is** local is discussed later)
+* does some data cleaning (trivial in our case, but could be complex)
+* saves the cleaned data to a location in S3 specified by arguments (note that the S3 url is hard-coded here, but it could also be an argument if it needed to change)
+
+Note too that we include and `import` statements needed by our function *inside* the function definition.  Normally this is bad practice, but it is a requirement for these lightweight pipeline steps because Kubeflow Pipelines only knows about what happens inside the function.  
+
+Now that we have a python function that can do our cleaning, we need to package it into a Kubeflow Pipelines Component.  Components are reusable descriptions of how to create a step in a pipeline, represented by YAML files.  Conveniently, the kfp SDK provides us with tooling to create a component from a regular python function, like so:
+
+
+```python
+clean_data_op = components.create_component_from_func(
+    clean_arff_data,
+    output_component_file="clean_data.yaml",
+    packages_to_install=["pandas==1.2.4", "scipy==1.7.0", "boto3"],
+)
+```
+
+This command generates the file `clean_data.yaml` - go check it out!  You'll see it wrapped our python function into a `python -c` command line call with a little package and argument management around it.  This is why we needed our `import` statements *inside* the function, KFP only knows about the code inside the function it is compiling into a component.  This is all executed it in a basic `python:3.X` docker image (see the `image: python:3.7` line in the spec).  Because the basic python image doesn't have the dependencies we needed, we set `packages_to_install` to define which extra dependencies should be intalled before script execution.
+
+While `clean_data.yaml` describes what a clean_data component looks like, the `clean_data_op` returned here is a factory class to actually *create* pipeline steps from the component specification.  It is what we will use later in our pipeline to actually *do* clean_data operations.
+
+To actually fetch raw data, we can download it from the internet.  While we could write a python function to do this like above, getting files from the internet is so common that Kubeflow Pipelines provides us with a [reusable web downloader component](https://github.com/kubeflow/pipelines/blob/master/components/contrib/web/Download/component.yaml) that we can use here.  
+
+To do this, we simply load this component:
+
+
+```python
+# Data ingest operation.
+# Output is in outputs['data']
+ingest_data_op = components.load_component_from_url(
+    'https://raw.githubusercontent.com/kubeflow/pipelines/master/components/contrib/web/Download/component.yaml'
+)
+```
+
+8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to [resources README](./resources/README.md) of this guide.  Note too that this step is a bit complex, but don't worry too much if you don't understand it all right way.  In essense, this just sets up a pipeline step that does Katib tuning using a [reusable Katib launcher component](https://github.com/kubeflow/pipelines/blob/master/components/kubeflow/katib-launcher/component.yaml).
 
 
 ```python
@@ -287,6 +317,8 @@ def create_katib_experiment_op(experiment_name, experiment_namespace, bucket, ke
     return op
 ```
 
+We also need to massage the Katib outputs a bit, so we add another lightweight pipeline step like we created above.
+
 
 ```python
 # Convert Katib experiment hyperparameter results to arguments in string format.
@@ -304,7 +336,12 @@ def convert_katib_results(katib_results) -> str:
     return " ".join(best_hps)
 ```
 
-9. Create the last step of the pipeline that will do model training using Tensorflow based on Katib tuning results.
+
+```python
+convert_katib_results_op = components.func_to_container_op(convert_katib_results)
+```
+
+9. Create the last step of the pipeline that will do model training using Tensorflow based on Katib tuning results.  Again, this looks complicated, but in essense it just sets up a model training run using a Tensorflow job.
 
 
 ```python
@@ -395,11 +432,10 @@ def create_tfjob_op(tfjob_name, tfjob_namespace, model, bucket, key):
     return op
 ```
 
-10. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be uqinue. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
+10. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be unique. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
 
 
 ```python
-name = "demo-pipeline"
 namespace = "admin"
 s3_bucket = "demo-dataset"
 key = "data.csv"
@@ -409,39 +445,53 @@ dataset_url = "https://www.openml.org/data/download/53995/KDDCup09_churn.arff"
     name = "ML Workflow in Kubeflow",
     description = "Demo pipeline"
 )
-def demo_pipeline(name=name, namespace=namespace):
+def demo_pipeline(namespace=namespace):
 
     # Step 1: Download dataset.
     ingest_data_task = ingest_data_op(url=dataset_url)
 
     # Step 2: Clean up the dataset and store it in S3 bucket.
-    clean_data_op = components.create_component_from_func(
-            clean_arff_data,
-            "clean_data.yaml",
-            packages_to_install=["pandas==1.2.4", "scipy==1.7.0", "boto3"],
-        )
-    clean_data_task = (clean_data_op(
+    # Note that we pass the `ingest_data_task.outputs['data']` as an argument here.  Because that output is
+    # defined as a file path, KFP knows it needs to copy the data from ingest_data_task to clean_data_task.  
+    # See [upstream docs](https://www.kubeflow.org/docs/components/pipelines/v1/sdk/python-function-components/)
+    # for more detail.
+    clean_data_task = clean_data_op(
         s3_bucket,
         key,
         ingest_data_task.outputs['data']
-    ).apply(use_k8s_secret(
+    )
+                       
+    # Because our S3 access needs credentials, we can apply an extra directive to pull those from an existing secret
+    # Note that this requires that the namespace you're executing the step in has this secret already
+    clean_data_task.apply(use_k8s_secret(
         secret_name='mlpipeline-minio-artifact',
         k8s_secret_key_to_env={
             'accesskey': 'AWS_ACCESS_KEY_ID',
             'secretkey': 'AWS_SECRET_ACCESS_KEY',
-        })))
+        }
+    ))
 
-    with dsl.Condition(clean_data_task.output == "Done"):
-        # Step 3: Run hyperparameter tuning with Katib.
-        katib_op = create_katib_experiment_op(name, namespace, s3_bucket, key)
+    # Step 3: Run hyperparameter tuning with Katib.
+    # Use the kfp.dsl.EXECUTION_ID_PLACEHOLDER to get a unique name each time we execute this pipeline
+    katib_task = create_katib_experiment_op(
+        experiment_name=f"ml-workflow-{kfp.dsl.RUN_ID_PLACEHOLDER}",
+        experiment_namespace=namespace,
+        bucket=s3_bucket,
+        key=key
+    )
 
-        # Step 4: Convert Katib results produced by hyperparameter tuning to model.
-        convert_katib_results_op = components.func_to_container_op(convert_katib_results)
-        best_katib_model_op = convert_katib_results_op(katib_op.output)
+    # Our katib_task needs our cleaned data, but since we've stored that data in S3 we don't directly pass it from clean_data to katib.  
+    # Because of that, KFP does not know implicitly that katib can only be run after clean_data.  Use .after() to explicitly state this
+    # so KFP knows to schedule them in sequence.
+    katib_task.after(clean_data_task)
+    
+    # Step 4: Convert Katib results produced by hyperparameter tuning to model.
+    # Note that we do not need to use .after() here, because KFP notices best_katib_model_op needs katib_op.output.
+    best_katib_model_task = convert_katib_results_op(katib_task.output)
 
-        # Step 5: Run training with TFJob. Model will be stored into ML Flow model registry
-        # (done inside container image).
-        tfjob_op = create_tfjob_op(name, namespace, best_katib_model_op.output, s3_bucket, key)
+    # Step 5: Run training with TFJob. Model will be stored into MLflow model registry
+    # (done inside container image).
+    tfjob_task = create_tfjob_op(f"ml-workflow-{kfp.dsl.RUN_ID_PLACEHOLDER}", namespace, best_katib_model_task.output, s3_bucket, key)
 ```
 
 11. Execute pipeline.
@@ -463,7 +513,7 @@ print(f"Run ID: {run_id}")
 
 ![Pipeline](./images/ML-Workflow-Pipeline.png)
 
-13. Verify that model is stored in MLFlow model registry by navigating to ML Flow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
+13. Verify that model is stored in MLFlow model registry by navigating to MLflow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
 
 ![MLFlow](./images/ML-Workflow-MLFLowRegistry.png)
 
