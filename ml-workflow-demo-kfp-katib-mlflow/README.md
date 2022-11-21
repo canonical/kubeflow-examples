@@ -20,7 +20,7 @@ This repository contains all artifacts needed to support this guide. `images/` d
 
 ## Prerequisites
 
-- Deployed Kubeflow instance including Katib, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart (Note that the `kubeflow-lite` bundle does not include Katib. Use `juju deploy kubeflow --trust` instead when you get to that step).
+- Deployed Kubeflow instance including Katib, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart (Note that the `kubeflow-lite` bundle does not include Katib. Use `juju deploy kubeflow --trust` instead when you get to that step). Mode details on Kubeflow can be found here https://www.kubeflow.org/docs/.
 - Deployed MLFlow. For deployment of Charmed MLFlow refer to https://charmed-kubeflow.io/docs/mlflow
 - Familiarity with Python, Docker, Jupyter notebooks.
 
