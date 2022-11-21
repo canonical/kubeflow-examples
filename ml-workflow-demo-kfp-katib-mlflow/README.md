@@ -449,6 +449,11 @@ dataset_url = "https://www.openml.org/data/download/53995/KDDCup09_churn.arff"
 )
 def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
 
+    # Generate unique pipeline name.
+    import datetime
+    cur_date = str(datetime.datetime.now()).replace(" ", "-").replace(":", "-")
+    pipeline_name = f"{name}-{cur_date}"
+
     # Step 1: Download dataset.
     ingest_data_task = ingest_data_op(url=dataset_url)
 
@@ -474,7 +479,7 @@ def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
     with dsl.Condition(clean_data_task.output == "Done"):
         # Step 3: Run hyperparameter tuning with Katib.
         katib_task = create_katib_experiment_op(
-            experiment_name=name,
+            experiment_name=pipeline_name,
             experiment_namespace=namespace,
             bucket=s3_bucket,
             key=key
@@ -485,7 +490,7 @@ def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
 
         # Step 5: Run training with TFJob. Model will be stored into ML Flow model registry
         # (done inside container image).
-        tfjob_op = create_tfjob_op(tfjob_name=name,
+        tfjob_op = create_tfjob_op(tfjob_name=pipeline_name,
                                    tfjob_namespace=namespace,
                                    model=best_katib_model_task.output,
                                    bucket=s3_bucket,
