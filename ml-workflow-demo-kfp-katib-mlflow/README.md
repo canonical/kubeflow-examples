@@ -18,7 +18,7 @@ The following diagram outlines ML workflow presented in this guide. Major pipeli
 - Model training using best parameters from tuning stage.
 - Storing the resulting production model to MLFlow model registry.
 
-![Diagram](./images/ML-Workflow-Demo-Diagram.png)
+![Diagram](./graphics/ML-Workflow-Demo-Diagram.png)
 
 This repository contains all artifacts needed to support this guide. `images/` directory contains all related screenshorts and diagrams. `resources/` directory contains Jupyter notebook containing all steps in this guide, `Dockerfile` and Python script for training image used in this guide.
 
@@ -40,15 +40,15 @@ The following are the instructions that outline the workflow process.
     2. Select Tensorflow image `jupyter-tensorflow-full:v1.6.0`
     3. Select minimum configuration: 1 CPU and 4GB of RAM
 
-![NotebookCreate](./images/ML-Workflow-NotebookCreate-diag.png)
+![NotebookCreate](./graphics/ML-Workflow-NotebookCreate-diag.png)
 
-![NewNotebook](./images/ML-Workflow-NewNotebook-diag.png)
+![NewNotebook](./graphics/ML-Workflow-NewNotebook-diag.png)
 
 4. Connect to the newly created notebook.
 
 5. Create a Jupyter notebook to hold code that will specify the Kubeflow pipeline.
 
-![NewJupyterNotebook](./images/ML-Workflow-NewJupyterNotebook-diag.png)
+![NewJupyterNotebook](./graphics/ML-Workflow-NewJupyterNotebook-diag.png)
 
 NOTE: The following Jupyter notebook contains all the steps outlined below: [https://github.com/canonical/kubeflow-examples/ml-workflow-demo-kfp-katib-mlflow/ml-workflow-demo-kfp-katib-mlflow.ipynb](./ml-workflow-demo-kfp-katib-mlflow.ipynb)
 
@@ -450,7 +450,7 @@ dataset_url = "https://www.openml.org/data/download/53995/KDDCup09_churn.arff"
 def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
 
     # Use the kfp.dsl.RUN_ID_PLACEHOLDER to get a unique name each time we execute this pipeline
-    demo_pipeline_name = {kfp.dsl.RUN_ID_PLACEHOLDER}
+    pipeline_name = f"{name}-{kfp.dsl.RUN_ID_PLACEHOLDER}"
 
     # Step 1: Download dataset.
     ingest_data_task = ingest_data_op(url=dataset_url)
@@ -477,7 +477,7 @@ def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
     with dsl.Condition(clean_data_task.output == "Done"):
         # Step 3: Run hyperparameter tuning with Katib.
         katib_task = create_katib_experiment_op(
-            experiment_name=demo_pipeline_name,
+            experiment_name=pipeline_name,
             experiment_namespace=namespace,
             bucket=s3_bucket,
             key=key
@@ -488,8 +488,8 @@ def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
 
         # Step 5: Run training with TFJob. Model will be stored into ML Flow model registry
         # (done inside container image).
-        tfjob_op = create_tfjob_op(experiment_name=demo_pipeline_name,
-                                   experimant_namespace=namespace,
+        tfjob_op = create_tfjob_op(tfjob_name=pipeline_name,
+                                   tfjob_namespace=namespace,
                                    model=best_katib_model_task.output,
                                    bucket=s3_bucket,
                                    key=key)
@@ -510,14 +510,14 @@ print(f"Run ID: {run_id}")
 
 12. Observe run details by selecting **Run details** link.
 
-![Pipeline](./images/ML-Workflow-Pipeline.png)
+![Pipeline](./graphics/ML-Workflow-Pipeline.png)
 
 14. When Katib experiment has started observe details of this experiment by selecting **Exeperiments (AutoML)** option on sidebar of Kubeflow dashboard.
 
-[!Experiment](./images/ML-Workflow-Experiment.png)
+![Experiment](./graphics/ML-Workflow-Experiment.png)
 
 13. Verify that model is stored in MLFlow model registry by navigating to MLFlow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
 
-![MLFlow](./images/ML-Workflow-MLFLowRegistry.png)
+![MLFlow](./graphics/ML-Workflow-MLFLowRegistry.png)
 
 14. Now model is ready to be deployed!
