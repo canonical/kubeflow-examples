@@ -20,7 +20,7 @@ The following diagram outlines ML workflow presented in this guide. Major pipeli
 
 ![Diagram](./graphics/ML-Workflow-Demo-Diagram.png)
 
-This repository contains all artifacts needed to support this guide. `images/` directory contains all related screenshorts and diagrams. `resources/` directory contains Jupyter notebook containing all steps in this guide, `Dockerfile` and Python script for training image used in this guide.
+This repository contains all artifacts needed to support this guide. `graphics/` directory contains all related screenshorts and diagrams. `resources/` directory contains Jupyter notebook containing all steps in this guide, `Dockerfile` and Python script for training image used in this guide.
 
 ## Prerequisites
 
