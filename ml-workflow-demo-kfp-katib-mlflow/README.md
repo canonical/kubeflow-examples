@@ -20,7 +20,7 @@ This repository contains all artifacts needed to support this guide. `images/` d
 
 ## Prerequisites
 
-- Deployed Kubeflow instance including Katib, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart (note: the `kubeflow-lite` bundle does not include Katib. Use `juju deploy kubeflow --trust` instead when you get to that step).
+- Deployed Kubeflow instance including Katib, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart (Note that the `kubeflow-lite` bundle does not include Katib. Use `juju deploy kubeflow --trust` instead when you get to that step).
 - Deployed MLFlow. For deployment of Charmed MLFlow refer to https://charmed-kubeflow.io/docs/mlflow
 - Familiarity with Python, Docker, Jupyter notebooks.
 
@@ -76,12 +76,10 @@ from kubeflow.katib import V1beta1TrialParameterSpec
 
 7. Create pipeline steps that will do data ingestion and cleanup. Setup transfer of clean data to the next step using S3 bucket.
 
-NOTE: Ingtesting and cleaning of input data in this guide is an example of how data can be processed in the pipeline. Different ingest, data cleaning, data formats can be integrated.
+NOTE: Ingesting and cleaning of input data in this guide is an example of how data can be processed in the pipeline. Different data ingest, data cleaning, data formats can be integrated.
 
-To load raw data into the pipeline use Kubeflow Pipelines component [reusable web downloader component](https://github.com/kubeflow/pipelines/blob/master/components/contrib/web/Download/component.yaml) to create data ingerst opration.
+To load raw data into the pipeline use Kubeflow Pipelines component [reusable web downloader component](https://github.com/kubeflow/pipelines/blob/master/components/contrib/web/Download/component.yaml) to create data ingerst operation.
 
-
-Data ingest operation:
 
 
 ```python
@@ -92,7 +90,7 @@ ingest_data_op = components.load_component_from_url(
 )
 ```
 
-The data in this example is in ARFF format. Create function that will do cleanup of ingested data. In this example this function relies on specific components to aid in data processing. They are specified as packages and imports in the function code and cleanup data operation.
+The data in this example is in ARFF format. Create function that will do cleanup of ingested data. In this example this function relies on specific components to aid in data processing. They are specified as packages and imports in the function code and cleanup data operation. Note that S3 bucket is used as output for cleaned data.
 
 
 ```python
@@ -143,7 +141,7 @@ def clean_arff_data(
     s3_resource.Object(bucket, key).put(Body=csv_buffer.getvalue())
 ```
 
-Data cleanup operation:
+Define data cleanup operation based on data clean up function.
 
 
 ```python
@@ -157,7 +155,10 @@ clean_data_op = components.create_component_from_func(
 ```
 
 8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to [resources README](./resources/README.md) of this guide.
+
 Note that output of Katib hyperparameter tuning is converted into `string` format by helper function `convert_katib_results()`.
+
+Define Katib hyperparameter tuninig operation.
 
 
 ```python
@@ -309,6 +310,8 @@ def create_katib_experiment_op(experiment_name, experiment_namespace, bucket, ke
     return op
 ```
 
+Define Katib convert results operation.
+
 
 ```python
 # Convert Katib experiment hyperparameter results to arguments in string format.
@@ -326,11 +329,9 @@ def convert_katib_results(katib_results) -> str:
     return " ".join(best_hps)
 ```
 
-Katib hyperparameter tuninig operation:
-
 
 ```python
-# 
+# Katib convert results operation.
 convert_katib_results_op = components.func_to_container_op(convert_katib_results)
 ```
 
