@@ -1,18 +1,18 @@
 
-# ML Workflow Demo: Kubeflow - Katib - ML Flow
+# ML Workflow Demo: Kubeflow - Katib - MLFlow
 
 ## Overview
 
-This guide intended to introduce end users to complete ML workflow using Kubeflow. In particular, examples of Kubeflow pipeline using Katib hyperparameter tuning and ML Flow model registry are presented along with some common pipeline steps and interfaces such as S3.
+This guide intended to introduce end users to complete ML workflow using Kubeflow. In particular, examples of Kubeflow pipelines using Katib hyperparameter tuning and MLFlow model registry are presented along with some common pipeline steps and interfaces such as S3.
 
 The following diagram outlines ML workflow presented in this guide. Major pipeline steps include:
 - Ingestion of dataset.
 - Cleaning up the dataset.
 - Store of cleaned data to S3 bucket.
-- Hyperparameter tuning using Katib and Tensorflow training container image (with ML Flow store functionality).
-- Converting Katib results to streamlined format.
-- Model training using tuning results.
-- Storing the resulting production model to ML Flow model registry.
+- Hyperparameter tuning using Katib and Tensorflow training container image (with MLFlow store functionality).
+- Converting Katib tuning results to streamlined format.
+- Model training using best parameters from tuning stage.
+- Storing the resulting production model to MLFlow model registry.
 
 ![Diagram](./images/ML-Workflow-Demo-Diagram.png)
 
@@ -20,7 +20,7 @@ This repository contains all artifacts needed to support this guide. `images/` d
 
 ## Prerequisites
 
-- Deployed Kubeflow instance and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart
+- Deployed Kubeflow instance including Katib, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart (note: the `kubeflow-lite` bundle does not include Katib. Use `juju deploy kubeflow --trust` instead when you get to that step).
 - Deployed MLFlow. For deployment of Charmed MLFlow refer to https://charmed-kubeflow.io/docs/mlflow
 - Familiarity with Python, Docker, Jupyter notebooks.
 
@@ -32,9 +32,9 @@ The following are the instructions that outline the workflow process.
 2. Navigate to Notebooks.
 
 3. Create a new notebook.
-  a. Fill in name
-  b. Select Tensorflow image `jupyter-tensorflow-full:v1.6.0`
-  c. Select minimum configuration: 1 CPU and 4GB of RAM
+    1. Fill in name
+    2. Select Tensorflow image `jupyter-tensorflow-full:v1.6.0`
+    3. Select minimum configuration: 1 CPU and 4GB of RAM
 
 ![NotebookCreate](./images/ML-Workflow-NotebookCreate-diag.png)
 
@@ -46,7 +46,7 @@ The following are the instructions that outline the workflow process.
 
 ![NewJupyterNotebook](./images/ML-Workflow-NewJupyterNotebook-diag.png)
 
-NOTE: The following Jupyter notebook contains all the steps outlined below: [ml-workflow-demo-kfp-katib-mlflow.ipynb](./resources/ml-workflow-demo-kfp-katib-mlflow.ipynb)
+NOTE: The following Jupyter notebook contains all the steps outlined below: [https://github.com/canonical/kubeflow-examples/ml-workflow-demo-kfp-katib-mlflow/ml-workflow-demo-kfp-katib-mlflow.ipynb](./ml-workflow-demo-kfp-katib-mlflow.ipynb)
 
 6. To setup environment add the following cells to the newly created Jupyter notebook:
 
@@ -74,7 +74,14 @@ from kubeflow.katib import V1beta1TrialTemplate
 from kubeflow.katib import V1beta1TrialParameterSpec
 ```
 
-7. Create a pipeline steps that will do data ingestion and cleanup. Setup transfer of clean data to the next step using S3 bucket.
+7. Create pipeline steps that will do data ingestion and cleanup. Setup transfer of clean data to the next step using S3 bucket.
+
+NOTE: Ingtesting and cleaning of input data in this guide is an example of how data can be processed in the pipeline. Different ingest, data cleaning, data formats can be integrated.
+
+To load raw data into the pipeline use Kubeflow Pipelines component [reusable web downloader component](https://github.com/kubeflow/pipelines/blob/master/components/contrib/web/Download/component.yaml) to create data ingerst opration.
+
+
+Data ingest operation:
 
 
 ```python
@@ -85,6 +92,8 @@ ingest_data_op = components.load_component_from_url(
 )
 ```
 
+The data in this example is in ARFF format. Create function that will do cleanup of ingested data. In this example this function relies on specific components to aid in data processing. They are specified as packages and imports in the function code and cleanup data operation.
+
 
 ```python
 # Data clean up operation.
@@ -92,7 +101,7 @@ def clean_arff_data(
     bucket,
     key,
     input_file: components.InputPath(str)
-) -> str:
+):
     import pandas as pd
     import boto3
     import os
@@ -106,17 +115,18 @@ def clean_arff_data(
     df_data = pd.DataFrame(raw_data[0].copy())
     print(f"Loaded data file of shape {df_data.shape}")
 
+    print(f"Cleaning the data")
     # Convert target column to numeric.
     df_data.iloc[:, -1] = pd.get_dummies(df_data['CHURN']).iloc[:, 0]
 
     # Remove missing values.
     df_clean = df_data.dropna(axis=1)
-    df_clean.loc[:,'CHURN']=pd.get_dummies(df_data['CHURN']).iloc[:, 0]
+    df_clean.loc[:,'CHURN'] = pd.get_dummies(df_data['CHURN']).iloc[:, 0]
 
     # Get rid of non-numeric columns.
     df_clean = df_clean.select_dtypes(exclude='object')
 
-    # Save results to S3
+    print("Saving results to S3")
     csv_buffer = StringIO()
     df_clean.to_csv(csv_buffer)
     s3_resource = boto3.resource(
@@ -131,11 +141,23 @@ def clean_arff_data(
         s3_resource.create_bucket(Bucket=bucket)
     print(f"Saving CSV of shape {df_clean.shape} to s3")
     s3_resource.Object(bucket, key).put(Body=csv_buffer.getvalue())
+```
 
-    return "Done"
+Data cleanup operation:
+
+
+```python
+# Data cleanup operation.
+# Output data is in S3.
+clean_data_op = components.create_component_from_func(
+        clean_arff_data,
+        "clean_data.yaml",
+        packages_to_install=["pandas==1.2.4", "scipy==1.7.0", "boto3"],
+)
 ```
 
 8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to [resources README](./resources/README.md) of this guide.
+Note that output of Katib hyperparameter tuning is converted into `string` format by helper function `convert_katib_results()`.
 
 
 ```python
@@ -304,6 +326,14 @@ def convert_katib_results(katib_results) -> str:
     return " ".join(best_hps)
 ```
 
+Katib hyperparameter tuninig operation:
+
+
+```python
+# 
+convert_katib_results_op = components.func_to_container_op(convert_katib_results)
+```
+
 9. Create the last step of the pipeline that will do model training using Tensorflow based on Katib tuning results.
 
 
@@ -395,11 +425,10 @@ def create_tfjob_op(tfjob_name, tfjob_namespace, model, bucket, key):
     return op
 ```
 
-10. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be uqinue. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
+10. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be unique. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
 
 
 ```python
-name = "demo-pipeline"
 namespace = "admin"
 s3_bucket = "demo-dataset"
 key = "data.csv"
@@ -409,39 +438,52 @@ dataset_url = "https://www.openml.org/data/download/53995/KDDCup09_churn.arff"
     name = "ML Workflow in Kubeflow",
     description = "Demo pipeline"
 )
-def demo_pipeline(name=name, namespace=namespace):
+def demo_pipeline(namespace=namespace):
+
+    # Use the kfp.dsl.EXECUTION_ID_PLACEHOLDER to get a unique name each time we execute this pipeline
+    pipeline_name = f"ml-workflow-{kfp.dsl.RUN_ID_PLACEHOLDER}"
 
     # Step 1: Download dataset.
     ingest_data_task = ingest_data_op(url=dataset_url)
 
     # Step 2: Clean up the dataset and store it in S3 bucket.
-    clean_data_op = components.create_component_from_func(
-            clean_arff_data,
-            "clean_data.yaml",
-            packages_to_install=["pandas==1.2.4", "scipy==1.7.0", "boto3"],
-        )
-    clean_data_task = (clean_data_op(
+    # Note that we pass the `ingest_data_task.outputs['data']` as an argument here.  Because that output is
+    # defined as a file path, Kubeflow Pipeline will copy the data from ingest_data_task to clean_data_task.
+    clean_data_task = clean_data_op(
         s3_bucket,
         key,
         ingest_data_task.outputs['data']
-    ).apply(use_k8s_secret(
+    )
+
+    # Because S3 access needs credentials, an extra directive is needed to pull those from an existing secret.
+    clean_data_task.apply(use_k8s_secret(
         secret_name='mlpipeline-minio-artifact',
         k8s_secret_key_to_env={
             'accesskey': 'AWS_ACCESS_KEY_ID',
             'secretkey': 'AWS_SECRET_ACCESS_KEY',
-        })))
+        }
+    ))
 
-    with dsl.Condition(clean_data_task.output == "Done"):
-        # Step 3: Run hyperparameter tuning with Katib.
-        katib_op = create_katib_experiment_op(name, namespace, s3_bucket, key)
 
-        # Step 4: Convert Katib results produced by hyperparameter tuning to model.
-        convert_katib_results_op = components.func_to_container_op(convert_katib_results)
-        best_katib_model_op = convert_katib_results_op(katib_op.output)
+    # Step 3: Run hyperparameter tuning with Katib.
+    katib_task = create_katib_experiment_op(
+        experiment_name=pipeline_name,
+        experiment_namespace=namespace,
+        bucket=s3_bucket,
+        key=key
+    )
 
-        # Step 5: Run training with TFJob. Model will be stored into ML Flow model registry
-        # (done inside container image).
-        tfjob_op = create_tfjob_op(name, namespace, best_katib_model_op.output, s3_bucket, key)
+    # Clean data is stored in S3 and is not passed directly from data cleanup step. Because of this
+    # the pipeline need to make sure clean data stage is done prior to Katib hyperparamert tuning step.
+    # Use `.after()` to instruct the pipeline to schedule Katib after data cleanup.
+    katib_task.after(clean_data_task)
+
+    # Step 4: Convert Katib results produced by hyperparameter tuning to model.
+    best_katib_model_task = convert_katib_results_op(katib_task.output)
+
+    # Step 5: Run training with TFJob. Model will be stored into ML Flow model registry
+    # (done inside container image).
+    tfjob_op = create_tfjob_op(pipeline_name, namespace, best_katib_model_task.output, s3_bucket, key)
 ```
 
 11. Execute pipeline.
@@ -463,7 +505,7 @@ print(f"Run ID: {run_id}")
 
 ![Pipeline](./images/ML-Workflow-Pipeline.png)
 
-13. Verify that model is stored in MLFlow model registry by navigating to ML Flow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
+13. Verify that model is stored in MLFlow model registry by navigating to MLFlow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
 
 ![MLFlow](./images/ML-Workflow-MLFLowRegistry.png)
 
