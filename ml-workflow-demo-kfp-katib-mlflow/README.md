@@ -451,7 +451,7 @@ def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
 
     # Generate unique pipeline name.
     import datetime
-    cur_date = str(datetime.datetime.now()).replace(" ", "-").replace(":", "-")
+    cur_date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     pipeline_name = f"{name}-{cur_date}"
 
     # Step 1: Download dataset.
