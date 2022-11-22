@@ -433,7 +433,18 @@ def create_tfjob_op(tfjob_name, tfjob_namespace, model, bucket, key):
     return op
 ```
 
-10. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be unique. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
+10. Define a helper that generates timestamps in a Kubeflow Pipeline step. It will be needed to generate unique names for some of pipeline steps.
+
+
+```python
+def compute_timestamp() -> str:
+    import datetime
+    return datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+compute_timestamp_op = components.func_to_container_op(compute_timestamp)
+```
+
+11. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be unique. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
 
 
 ```python
@@ -449,13 +460,16 @@ dataset_url = "https://www.openml.org/data/download/53995/KDDCup09_churn.arff"
 )
 def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
 
-    # Generate unique pipeline name.
-    import datetime
-    cur_date = str(datetime.datetime.now()).replace(" ", "-").replace(":", "-")
-    pipeline_name = f"{name}-{cur_date}"
+    # Generate timestamp for unique pipeline name.
+    timestamp_task = compute_timestamp_op()
 
     # Step 1: Download dataset.
     ingest_data_task = ingest_data_op(url=dataset_url)
+
+    # Ensure timestamp generation for pipeline name is completed and set pipeline name.
+    ingest_data_task.after(timestamp_task)
+    pipeline_name = f"{name}-{timestamp_task.output}"
+
 
     # Step 2: Clean up the dataset and store it in S3 bucket.
     # Note that we pass the `ingest_data_task.outputs['data']` as an argument here.  Because that output is
@@ -494,13 +508,15 @@ def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
                                    tfjob_namespace=namespace,
                                    model=best_katib_model_task.output,
                                    bucket=s3_bucket,
-                                   key=key)
+                                   key=key
+        )
 ```
 
 11. Execute pipeline.
 
 
 ```python
+# Execute pipeline.
 kfp_client = Client()
 run_id = kfp_client.create_run_from_pipeline_func(
         demo_pipeline,
