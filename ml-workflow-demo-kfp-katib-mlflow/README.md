@@ -512,7 +512,7 @@ def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
         )
 ```
 
-11. Execute pipeline.
+12. Execute pipeline.
 
 
 ```python
@@ -526,7 +526,7 @@ run_id = kfp_client.create_run_from_pipeline_func(
 print(f"Run ID: {run_id}")
 ```
 
-12. Observe run details by selecting **Run details** link.
+13. Observe run details by selecting **Run details** link.
 
 ![Pipeline](./graphics/ML-Workflow-Pipeline.png)
 
@@ -534,8 +534,8 @@ print(f"Run ID: {run_id}")
 
 ![Experiment](./graphics/ML-Workflow-Experiment.png)
 
-13. Verify that model is stored in MLFlow model registry by navigating to MLFlow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
+15. Verify that model is stored in MLFlow model registry by navigating to MLFlow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
 
 ![MLFlow](./graphics/ML-Workflow-MLFLowRegistry.png)
 
-14. Now model is ready to be deployed!
+16. Now model is ready to be deployed!
