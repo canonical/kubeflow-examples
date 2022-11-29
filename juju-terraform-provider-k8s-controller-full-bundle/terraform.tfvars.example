@@ -1,0 +1,2 @@
+# Terraform Bundle configuration
+juju_cloud = "kubernetes_cloud"
