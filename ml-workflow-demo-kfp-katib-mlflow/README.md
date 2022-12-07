@@ -1,6 +1,19 @@
 
 # ML Workflow Demo: Kubeflow - Katib - MLFlow
 
+*Last verified: Dec 2, 2022*
+
+## Contents
+
+- Overview
+- Prerequisites
+- Instructions
+  - Create notebook server and Jupyter notebook
+  - Define ML pipeline
+  - Execute pipeline
+  - Monitor progress and obtain results
+
+
 ## Overview
 
 This guide intended to introduce end users to complete ML workflow using Kubeflow. In particular, examples of Kubeflow Pipelines using Katib hyperparameter tuning and MLFlow model registry are presented along with some common pipeline steps and interfaces such as S3.
@@ -29,7 +42,10 @@ This repository contains all artifacts needed to support this guide. `graphics/`
 - Familiarity with Python, Docker, Jupyter notebooks.
 
 ## Instructions
+
 The following are the instructions that outline the workflow process.
+
+### Create notebook server and Jupyter notebook
 
 1. Access Kubeflow dashboard via URL, eg http://10.64.140.43.nip.io/
 
@@ -50,9 +66,11 @@ The following are the instructions that outline the workflow process.
 
 ![NewJupyterNotebook](./graphics/ML-Workflow-NewJupyterNotebook-diag.png)
 
+### Define ML pipeline
+
 NOTE: The following Jupyter notebook contains all the steps outlined below: [https://github.com/canonical/kubeflow-examples/ml-workflow-demo-kfp-katib-mlflow/ml-workflow-demo-kfp-katib-mlflow.ipynb](./ml-workflow-demo-kfp-katib-mlflow.ipynb)
 
-6. To setup environment add the following cells to the newly created Jupyter notebook:
+1. To setup environment add the following cells to the newly created Jupyter notebook:
 
 
 ```python
@@ -78,7 +96,7 @@ from kubeflow.katib import V1beta1TrialTemplate
 from kubeflow.katib import V1beta1TrialParameterSpec
 ```
 
-7. Create pipeline steps that will do data ingestion and cleanup. Setup transfer of clean data to the next step using S3 bucket.
+2. Create pipeline steps that will do data ingestion and cleanup. Setup transfer of clean data to the next step using S3 bucket.
 
 NOTE: Ingesting and cleaning of input data in this guide is an example of how data can be processed in the pipeline. Different data ingest, data cleaning, data formats can be integrated.
 
@@ -161,7 +179,7 @@ clean_data_op = components.create_component_from_func(
 )
 ```
 
-8. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to [resources README](./resources/README.md) of this guide.
+3. Create the next pipeline step that will do hyperparameter tuning using Katib and a training container image `docker.io/misohu/kubeflow-training:latest`. For more details on the training container image refer to [resources README](./resources/README.md) of this guide.
 
 Note that output of Katib hyperparameter tuning is converted into `string` format by helper function `convert_katib_results()`.
 
@@ -342,7 +360,7 @@ def convert_katib_results(katib_results) -> str:
 convert_katib_results_op = components.func_to_container_op(convert_katib_results)
 ```
 
-9. Create the last step of the pipeline that will do model training using Tensorflow based on Katib tuning results.
+4. Create the last step of the pipeline that will do model training using Tensorflow based on Katib tuning results.
 
 
 ```python
@@ -433,7 +451,7 @@ def create_tfjob_op(tfjob_name, tfjob_namespace, model, bucket, key):
     return op
 ```
 
-10. Define a helper that generates timestamps in a Kubeflow Pipeline step. It will be needed to generate unique names for some of pipeline steps.
+5. Define a helper that generates timestamps in a Kubeflow Pipeline step. It will be needed to generate unique names for some of pipeline steps.
 
 
 ```python
@@ -444,7 +462,7 @@ def compute_timestamp() -> str:
 compute_timestamp_op = components.func_to_container_op(compute_timestamp)
 ```
 
-11. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be unique. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
+6. Define a complete pipeline that consists of all steps created earlier. Note that the name of the pipeline must be unique. If there was previously defined pipeline with the same name and within the same namespace either change the name of current pipeline or delete the older pipeline from the namespace.
 
 
 ```python
@@ -512,7 +530,9 @@ def demo_pipeline(name=demo_pipeline_name, namepace=namespace):
         )
 ```
 
-12. Execute pipeline.
+### Execute pipeline
+
+1. Execute pipeline.
 
 
 ```python
@@ -526,16 +546,18 @@ run_id = kfp_client.create_run_from_pipeline_func(
 print(f"Run ID: {run_id}")
 ```
 
-13. Observe run details by selecting **Run details** link.
+### Monitor progress and access results
+
+1. Observe run details by selecting **Run details** link.
 
 ![Pipeline](./graphics/ML-Workflow-Pipeline.png)
 
-14. When Katib experiment has started observe details of this experiment by selecting **Exeperiments (AutoML)** option on sidebar of Kubeflow dashboard.
+2. When Katib experiment has started observe details of this experiment by selecting **Exeperiments (AutoML)** option on sidebar of Kubeflow dashboard.
 
 ![Experiment](./graphics/ML-Workflow-Experiment.png)
 
-15. Verify that model is stored in MLFlow model registry by navigating to MLFlow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
+3. Verify that model is stored in MLFlow model registry by navigating to MLFlow dashboard, eg. http://10.64.140.43.nip.io/mlflow/#/
 
 ![MLFlow](./graphics/ML-Workflow-MLFLowRegistry.png)
 
-16. Now model is ready to be deployed!
+4. Now model is ready to be deployed!
