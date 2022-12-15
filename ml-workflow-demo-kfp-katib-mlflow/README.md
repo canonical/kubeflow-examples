@@ -1,7 +1,7 @@
 
 # ML Workflow Demo: Kubeflow - Katib - MLFlow
 
-*Last verified: Dec 2, 2022*
+*Last verified: Dec 14, 2022*
 
 ## Contents
 
