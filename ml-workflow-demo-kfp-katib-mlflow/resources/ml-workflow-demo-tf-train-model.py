@@ -91,7 +91,7 @@ def model_function():
     return model
 
 
-def get_svc_from_s3(response):
+def get_csv_from_s3(response):
     r_bytes = r_bytes = response["Body"].read()
     s = str(r_bytes, "utf-8")
     data = StringIO(s)
@@ -110,7 +110,7 @@ def main():
     if args.s3_storage:
         logging.info(f"Trying to use S3 dataset from {args.bucket}/{args.bucket_key}")
         response = get_s3_object()
-        kdd_cup_data_clean = get_svc_from_s3(response)
+        kdd_cup_data_clean = get_csv_from_s3(response)
     else:
         kdd_cup_data_clean = pd.read_csv(args.tf_data_dir)
 
