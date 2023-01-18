@@ -1,7 +1,7 @@
 
 # ML Workflow Demo: Kubeflow - Katib - MLFlow
 
-*Last verified: Dec 2, 2022*
+*Last verified: Jan 18, 2023*
 
 ## Contents
 
@@ -37,7 +37,7 @@ This repository contains all artifacts needed to support this guide. `graphics/`
 
 ## Prerequisites
 
-- Deployed Kubeflow instance including Katib, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/quickstart (Note that the `kubeflow-lite` bundle does not include Katib. Use `juju deploy kubeflow --trust` instead when you get to that step). More details on Kubeflow can be found here https://www.kubeflow.org/docs/.
+- Deployed Kubeflow instance including Katib, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/get-started-with-charmed-kubeflow . More details on Kubeflow can be found here https://www.kubeflow.org/docs/.
 - Deployed MLFlow. For deployment of Charmed MLFlow refer to https://charmed-kubeflow.io/docs/mlflow
 - Familiarity with Python, Docker, Jupyter notebooks.
 
@@ -47,7 +47,7 @@ The following are the instructions that outline the workflow process.
 
 ### Create notebook server and Jupyter notebook
 
-1. Access Kubeflow dashboard via URL, eg http://10.64.140.43.nip.io/
+1. Access Kubeflow dashboard via URL, eg. http://10.64.140.43.nip.io/
 
 2. Navigate to Notebooks.
 
