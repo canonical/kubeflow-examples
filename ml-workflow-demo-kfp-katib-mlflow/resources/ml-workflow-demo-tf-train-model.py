@@ -1,11 +1,18 @@
 import tensorflow as tf
 import pandas as pd
+import logging
 import mlflow
 import mlflow.keras
 import argparse
 import os
 import boto3
 from io import StringIO
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-8s %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%SZ",
+)
 
 # Instructions to get these VARs: https://github.com/canonical/mlflow-operator#get-minio-key-and-secret
 # This assumes you have deployed MLFlow https://github.com/canonical/mlflow-operator#get-started
@@ -69,7 +76,7 @@ def get_s3_object():
         aws_secret_access_key=os.getenv('secretkey'),
     )
     response = s3.get_object(Bucket=args.bucket, Key=args.bucket_key)
-    print("S3 object loaded")
+    logging.info("S3 object loaded")
     return response
 
 
@@ -89,7 +96,7 @@ def get_csv_from_s3(response):
     s = str(r_bytes, "utf-8")
     data = StringIO(s)
     df = pd.read_csv(data)
-    print("Datafreame processed from S3 object")
+    logging.info("Datafreame processed from S3 object")
     return df
 
 
@@ -98,10 +105,10 @@ def main():
     model.compile(
         optimizer="rmsprop", loss="categorical_crossentropy", metrics=["accuracy"]
     )
-    print(args.mlflow_model_name)
+    logging.info(args.mlflow_model_name)
 
     if args.s3_storage:
-        print(f"Trying to use S3 dataset from {args.bucket}/{args.bucket_key}")
+        logging.info(f"Trying to use S3 dataset from {args.bucket}/{args.bucket_key}")
         response = get_s3_object()
         kdd_cup_data_clean = get_csv_from_s3(response)
     else:
@@ -112,9 +119,9 @@ def main():
         y_train = kdd_cup_data_clean["CHURN"]
         model.fit(X_train, y_train, batch_size=50, epochs=args.epochs)
         if args.mlflow_model_name != "":
-            print("Saving model to mlflow")
+            logging.info("Saving model to mlflow")
             result = mlflow.keras.log_model(model, "models", registered_model_name=args.mlflow_model_name)
-            print(f"Model saved to {mlflow.get_artifact_uri()}/{result.artifact_path}")
+            logging.info(f"Model saved to {mlflow.get_artifact_uri()}/{result.artifact_path}")
             return f"{mlflow.get_artifact_uri()}/{result.artifact_path}"
 
         X_test = kdd_cup_data_clean.loc[:, kdd_cup_data_clean.columns != "CHURN"]
@@ -123,8 +130,8 @@ def main():
         loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
         loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
 
-        print(f"loss = {loss}")
-        print(f"accuracy = {accuracy}")
+        logging.info(f"loss = {loss}")
+        logging.info(f"accuracy = {accuracy}")
 
 
 if __name__ == "__main__":
