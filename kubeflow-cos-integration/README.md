@@ -1,15 +1,24 @@
 
 # Kubeflow and COS Integration
 
-*Last verified: ??? ??, 2023*
+*Last verified: Feb 15, 2023*
+
+*This file is generated based on `kubeflow-cos-integration.ipynb`*
 
 ## Contents
 
-- Overview
-- Prerequisites
-- Instructions
-  - Prometheus integration
-  - Grafana integration
+* [Overview](#overview)
+* [Prerequisites](#prerequisites)
+* [Instructions](#instructions)
+  * [Prometheus integration](#prometheus-integration)
+  * [Grafana integration](#grafana-integration)
+  * [Access Prometheus metrics](#access-prometheus-metrics)
+  * [Access Prometheus alerts](#access-prometheus-alerts)
+    * [List of alerts per Kubeflow component](#list-of-alerts-per-kubeflow-component)
+  * [Access Grafana dashboards](#access-grafana-dashboards)
+    * [View metrics in ArgoWorkflow Metrics dashboard](#view-metrics-in-argoworkflow-metrics-dashboard)
+    * [View metrics in Jupyter Notebook Controller dashboard](#view-metrics-in-jupyter-notebook-controller-dashboard)
+    * [View metrics in Seldon Controller Manager dashboard](#view-metrics-in-seldon-controller-manager-dashboard)
 
 ## Overview
 
@@ -17,13 +26,15 @@ This guide intended to introduce end users to integration of Kubeflow and COS (C
 
 For more detailed documentation on Kubeflow Pipelines refer to https://www.kubeflow.org/docs/components/pipelines/
 
-This repository contains all artifacts needed to support this guide. `graphics/` directory contains all related screenshorts and diagrams. `resources/` directory contains Jupyter notebook containing all steps in this guide.
+This repository contains all artifacts needed to support this guide. `graphics/` directory contains all related screenshorts and diagrams. `resources/` directory contains all resources needed to generate this `README.md` and run automated documentation tests. Main documentation which this `README.md` is generated from is in `kubeflow-cos-integration.ipynb`.
 
 ## Prerequisites
 
 - Deployed Kubeflow instance, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/get-started-with-charmed-kubeflow. More details on Kubeflow can be found here https://www.kubeflow.org/docs/.
 - Deployed COS. For deployment of COS refer to https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s
 - Familiarity with Python, Jupyter notebooks.
+- Minimum system requirements: CPU 8 RAM 24GB DISK 120GB
+
 
 ## Instructions
 
