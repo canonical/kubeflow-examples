@@ -2,6 +2,7 @@
 # Kubeflow and COS Integration
 
 *Last verified: Feb 15, 2023*
+*This file is generated based on `kubeflow-cos-integration.ipynb`*
 
 ## Contents
 
