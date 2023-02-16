@@ -33,7 +33,7 @@ This repository contains all artifacts needed to support this guide. `graphics/`
 - Deployed Kubeflow instance, and access to Kubeflow dashboard. For sample Kubeflow deployment refer to https://charmed-kubeflow.io/docs/get-started-with-charmed-kubeflow. More details on Kubeflow can be found here https://www.kubeflow.org/docs/.
 - Deployed COS. For deployment of COS refer to https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s
 - Familiarity with Python, Jupyter notebooks.
-- Minimum system requirements: CPU 8 RAM 24GB DISK 120GB
+- Minimum system requirements: CPU 8 RAM 32GB DISK 120GB
 
 
 ## Instructions
