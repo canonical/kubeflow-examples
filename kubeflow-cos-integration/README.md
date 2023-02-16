@@ -5,11 +5,18 @@
 
 ## Contents
 
-- Overview
-- Prerequisites
-- Instructions
-  - Prometheus integration
-  - Grafana integration
+* [Overview](#overview)
+* [Prerequisites](#prerequisites)
+* [Instructions](#instructions)
+  * [Prometheus integration](#prometheus-integration)
+  * [Grafana integration](#grafana-integration)
+  * [Access Prometheus metrics](#access-prometheus-metrics)
+  * [Access Prometheus alerts](#access-prometheus-alerts)
+    * [List of alerts per Kubeflow component](#list-of-alerts-per-kubeflow-component)
+  * [Access Grafana dashboards](#access-grafana-dashboards)
+    * [View metrics in ArgoWorkflow Metrics dashboard](#view-metrics-in-argoworkflow-metrics-dashboard)
+    * [View metrics in Jupyter Notebook Controller dashboard](#view-metrics-in-jupyter-notebook-controller-dashboard)
+    * [View metrics in Seldon Controller Manager dashboard](#view-metrics-in-seldon-controller-manager-dashboard)
 
 ## Overview
 
