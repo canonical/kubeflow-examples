@@ -1,7 +1,7 @@
 
 # Kubeflow and COS Integration
 
-*Last verified: Feb 15, 2023*
+*Last verified: Mar 3, 2023*
 
 *This file is generated based on `kubeflow-cos-integration.ipynb`*
 
@@ -34,6 +34,7 @@ This repository contains all artifacts needed to support this guide. `graphics/`
 - Deployed COS. For deployment of COS refer to https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s
 - Familiarity with Python, Jupyter notebooks.
 - Minimum system requirements: CPU 8 RAM 32GB DISK 120GB
+- Tools: `microk8s`,`juju`, `yq`, `curl`
 
 
 ## Instructions
@@ -84,11 +85,11 @@ Follow COS documentation on how to access Prometheus metrics [Browse dashboards]
 ```python
 juju switch cos
 PROMETHEUS_IP=$(juju show-unit prometheus/0 --format yaml | yq .prometheus/0.address)
-curl "http://$PROMETHEUS_IP:9090"
+curl -f -LI "http://$PROMETHEUS_IP:9090"
 ```
 
 
-Navigate to Promethues metrics URL, eg. `http://<prometheus-unit-ip>:9090`. Navigate to "Status"->"Targets" to see available metrics for various components that were related to Prometheus.
+Navigate to Promethues metrics URL, eg. `http://<prometheus-unit-ip>:9090`. Navigate to **Status**- > **Targets** to see available metrics for various components that were related to Prometheus.
 
 ![Targets](./graphics/Targets.png) 
 
@@ -146,13 +147,15 @@ Follow COS documentation on how to access Grafana dashboard [Brosed dashboards](
 juju switch cos
 GRAFANA_IP=$(juju show-unit grafana/0 --format yaml | yq .grafana/0.address)
 curl -f -LI "http://$GRAFANA_IP:3000"
+EXTERNAL_IP=$(microk8s kubectl -n cos get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+curl -f -LI "http://$EXTERNAL_IP/cos-grafana-0"
 ```
 
 
 
-Navigate to Grafana dashboard URL, eg. `http://<grafana-unit-ip>:3000`
+Navigate to Grafana dashboard URL, eg. `http://<grafana-unit-ip>:3000` or `http://<external-ip>/cos-grafana-0`
 
-Browse available dashboards by navigating to "Dashboards"->"Browse". There should be the following dashboards available:
+Browse available dashboards by navigating to **Dashboards** -> **Browse**. There should be the following dashboards available:
 - ArgoWorkflow Metrics
 - Jupyter Notebook Controller
 - Seldon Core
