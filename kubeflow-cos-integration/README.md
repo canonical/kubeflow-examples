@@ -24,8 +24,7 @@
 
 This guide intended to introduce end users to integration of Kubeflow and COS (Canonical Observability Stack)
 
-For more detailed documentation on Kubeflow Pipelines refer to https://www.kubeflow.org/docs/components/pipelines/
-
+<!-- The following should not be on Discourse -->
 This repository contains all artifacts needed to support this guide. `graphics/` directory contains all related screenshorts and diagrams. `resources/` directory contains all resources needed to generate this `README.md` and run automated documentation tests. Main documentation which this `README.md` is generated from is in `kubeflow-cos-integration.ipynb`.
 
 ## Prerequisites
