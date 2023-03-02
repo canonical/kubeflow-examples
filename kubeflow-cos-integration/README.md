@@ -152,8 +152,9 @@ curl -f -LI "http://$EXTERNAL_IP/cos-grafana-0"
 ```
 
 
-
 Navigate to Grafana dashboard URL, eg. `http://<grafana-unit-ip>:3000` or `http://<external-ip>/cos-grafana-0`
+
+NOTE: If deployed on AWS use the following command to properly set `EXTERNAL_IP` address: `EXTERNAL_IP=$(kubectl -n cos get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')`
 
 Browse available dashboards by navigating to **Dashboards** -> **Browse**. There should be the following dashboards available:
 - ArgoWorkflow Metrics
