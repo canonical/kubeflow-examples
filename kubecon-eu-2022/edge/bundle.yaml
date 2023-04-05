@@ -1,0 +1,11 @@
+bundle: kubernetes
+applications:
+  minio: { charm: minio,                   channel: latest/edge, revision: 64, series: kubernetes, scale: 1,
+           options: {
+             mode: gateway,
+             gateway-storage-service: azure,
+             access-key: include-file://../secret/minio-sa-name,
+             secret-key: include-file://../secret/minio-sa-key1
+           }
+  }
+  seldon-controller-manager: { charm: seldon-core,             channel: latest/edge, revision: 55, series: kubernetes, scale: 1 }
