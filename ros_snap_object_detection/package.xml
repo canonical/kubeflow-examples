@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ai_kubeflow_demo</name>
+  <version>0.0.0</version>
+  <description>TODO</description>
+
+  <maintainer email="guillaume.beuzeboc@canonical.com">gbeuzeboc</maintainer>
+
+
+  <license>TODO</license>
+
+  <build_depend>catkin</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>image_view</exec_depend>
+  <exec_depend>usb_cam</exec_depend>
+
+</package>

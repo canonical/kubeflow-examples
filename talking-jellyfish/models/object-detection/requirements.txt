@@ -1,0 +1,4 @@
+seldon-core
+transformers
+timm
+Pillow

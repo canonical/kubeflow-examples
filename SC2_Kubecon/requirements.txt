@@ -1,0 +1,7 @@
+loguru~=0.6.0
+pysc2~=4.0.0
+baselines~=0.1.6
+numpy~=1.23.1
+pandas~=1.4.3
+keras~=2.10.0
+tensorflow

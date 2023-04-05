@@ -1,0 +1,24 @@
+apiVersion: kubeflow.org/v1alpha1
+kind: PodDefault
+metadata:
+ name: access-minio
+spec:
+ desc: Allow access to Minio
+ selector:
+   matchLabels:
+     access-minio: "true"
+ env:
+   - name: AWS_ACCESS_KEY_ID
+     valueFrom:
+       secretKeyRef:
+         name: mlpipeline-minio-artifact
+         key: accesskey
+         optional: false
+   - name: AWS_SECRET_ACCESS_KEY
+     valueFrom:
+       secretKeyRef:
+         name: mlpipeline-minio-artifact
+         key: secretkey
+         optional: false
+   - name: MINIO_ENDPOINT_URL
+     value: http://minio.kubeflow.svc.cluster.local:9000
