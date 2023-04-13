@@ -1,0 +1,25 @@
+<launch>
+  <arg name="server" default="localhost"/> 
+
+  <node name="camera" pkg="usb_cam" type="usb_cam_node" output="screen" >
+    <param name="video_device" value="/dev/video0" />
+    <param name="image_width" value="640" />
+    <param name="image_height" value="480" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="color_format" value="yuv422p" />
+    <param name="camera_frame_id" value="usb_cam" />
+    <param name="io_method" value="mmap"/>
+  </node>
+
+  <node name="demo" pkg="ai_kubeflow_demo" type="ai_kubeflow_demo.py" output="screen">
+     <param name="server" type="string" value="$(arg server)"/>
+  </node>
+
+  <node name="image_view" pkg="image_view" type="image_view" args="image:=/camera/image_raw">
+    <param name="autosize" value="true" />
+  </node>
+
+  <node name="image_view_inf" pkg="image_view" type="image_view" args="image:=/inference">
+    <param name="autosize" value="true" />
+  </node>
+</launch>

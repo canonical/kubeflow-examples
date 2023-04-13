@@ -1,0 +1,22 @@
+bundle: kubernetes
+applications:
+  istio-gateway:
+    charm: istio-gateway
+    channel: 1.11/stable
+    scale: 1
+    options:
+      gateway_service_type: NodePort
+      kind: ingress
+  istio-pilot:
+    charm: istio-pilot
+    channel: 1.11/stable
+    scale: 1
+    options:
+      default-gateway: kubeflow-gateway
+  seldon-controller-manager:
+    charm: seldon-core
+    channel: 1.14/stable
+    scale: 1
+relations:
+- - istio-pilot:istio-pilot
+  - istio-gateway:istio-pilot

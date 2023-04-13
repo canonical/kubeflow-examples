@@ -1,0 +1,39 @@
+# Modified from https://github.com/canonical/kubeflow-ci/blob/main/releases/1.4/kubeflow-bundle.yaml
+
+bundle: kubernetes
+name: kubeflow-lite
+applications:
+  admission-webhook:
+    charm: admission-webhook
+    channel: 1.6/stable
+    scale: 1
+    _github_repo_name: admission-webhook-operator
+  istio-ingressgateway:
+    charm: istio-gateway
+    channel: 1.11/stable
+    scale: 1
+    trust: true
+    _github_repo_name: istio-operators
+    options:
+      kind: ingress
+  istio-pilot:
+    charm: istio-pilot
+    channel: 1.11/stable
+    scale: 1
+    trust: true
+    _github_repo_name: istio-operators
+    options:
+      default-gateway: kubeflow-gateway
+  metacontroller-operator:
+    charm: metacontroller-operator
+    channel: 2.0/stable
+    scale: 1
+    trust: true
+    _github_repo_name: metacontroller-operator
+  seldon-controller-manager:
+    charm: seldon-core
+    channel: 1.14/stable
+    scale: 1
+    _github_repo_name: seldon-core-operator
+relations:
+  - [istio-pilot:istio-pilot, istio-ingressgateway:istio-pilot]

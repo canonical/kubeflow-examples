@@ -1,0 +1,39 @@
+name: ai-kubeflow-demo
+base: core20
+version: '0.1'
+summary: Basic ROS1 package snap interfacing with kubeflow docker output
+description: |
+  Basic ROS1 package snap interfacing with kubeflow docker output
+  To run the docker on a machine
+
+        docker run --rm --network=host bponieckiklotz/jellyfish.object-detection:dev
+
+  This snap require you to connect the camera interface
+
+        sudo snap connect ai-kubeflow-demo:camera
+
+  Then you can run the demo by calling
+
+        ai-kubeflow-demo server:="IP_OF_THE_SERVER_RUNNING_THE_DOCKER"
+
+  An example would be
+
+        ai-kubeflow-demo server:="localhost"
+
+grade: stable
+confinement: strict
+
+parts:
+  demo:
+    plugin: catkin
+    source: .
+    stage-packages:
+      - ros-noetic-roslaunch
+apps:
+  ai-kubeflow-demo:
+    command: opt/ros/noetic/bin/roslaunch ai_kubeflow_demo demo.launch
+    plugs: [network, network-bind, camera]
+    extensions: [ros1-noetic, kde-neon]
+    environment:
+      "LD_LIBRARY_PATH": "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
+
