@@ -7,4 +7,3 @@
 ```shell
 kubectl apply -f ./examples/spark-pi.yaml -n kubeflow
 ```
-
