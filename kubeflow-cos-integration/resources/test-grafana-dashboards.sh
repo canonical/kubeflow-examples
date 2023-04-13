@@ -1,7 +1,7 @@
 #
 # Validate Grafana dashboards that are referenced by this guide
 #
-# Grafana dashboards covered by this tests are tacked in this directory and are in format:
+# Grafana dashboards covered by this tests are tracked in this directory and are in format:
 # <repo-name>-<dashboard-filename>
 #
 set -e
