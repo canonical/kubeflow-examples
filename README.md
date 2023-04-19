@@ -30,7 +30,7 @@ Kubeflow  is the open source machine learning toolkit on top of Kubernetes.
 
 [Learn more about Charmed Kubeflow](https://charmed-kubeflow.io/)
 
-##Explore more about AI/ML
+## Explore more about AI/ML
 
 - Stay up to date reading [Ubuntu AI](https://medium.com/ubuntu-ai) on Medium
 - Read our [guide to MLOps](https://ubuntu.com/engage/mlops-guide)
