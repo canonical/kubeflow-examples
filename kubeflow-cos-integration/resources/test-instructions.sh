@@ -1,5 +1,5 @@
 #
-# Automated testing of this guide
+# Automated testing of instructions in this guide
 #
 cd ..
 jupyter nbconvert --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags="{'text'}" --to notebook kubeflow-cos-integration.ipynb --output kubeflow-cos-integration.code.ipynb
