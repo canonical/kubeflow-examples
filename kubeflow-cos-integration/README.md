@@ -60,7 +60,6 @@ juju add-relation metacontroller-operator admin/cos.prometheus-scrape
 juju add-relation minio admin/cos.prometheus-scrape
 juju add-relation seldon-controller-manager admin/cos.prometheus-scrape
 juju add-relation training-operator admin/cos.prometheus-scrape
-juju add-relation mlflow-server admin/cos.prometheus-scrape
 juju add-relation jupyter-controller admin/cos.prometheus-scrape
 ```
 
@@ -84,7 +83,7 @@ Follow COS documentation on how to access Prometheus metrics [Browse dashboards]
 ```python
 juju switch cos
 PROMETHEUS_IP=$(juju show-unit prometheus/0 --format yaml | yq .prometheus/0.address)
-curl -f -LI "http://$PROMETHEUS_IP:9090"
+curl "http://$PROMETHEUS_IP:9090"
 ```
 
 
@@ -94,7 +93,7 @@ Navigate to Promethues metrics URL, eg. `http://<prometheus-unit-ip>:9090`. Navi
 
 ### Access Prometheus alerts
 
-In order to see alerts available for Prometheus, throufh Prometheus metrics URL, navigate to "Alerts".
+In order to see alerts available for Prometheus, through Prometheus metrics URL, navigate to "Alerts".
 
 ![Alerts](./graphics/Alerts.png)
 
@@ -139,7 +138,7 @@ SeldonUnitIsUnavailable | up < 1 | Critical
 
 ### Access Grafana dashboards
 
-Follow COS documentation on how to access Grafana dashboard [Brosed dashboards](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s) section or obtain IP address using `juju show-unit` command:
+Follow COS documentation on how to access Grafana dashboard [Browsed dashboards](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s) section or obtain IP address using `juju show-unit` command:
 
 
 ```python
