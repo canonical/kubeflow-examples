@@ -1,0 +1,26 @@
+name: Split CSV file
+description: Split CSV file into train and test datasets based on ratio
+
+inputs:
+- {name: dataset_csv, type: CSV, description: 'Input Dataset'}
+- {name: ratio, type: Float, default: '0.7', description: 'Split ratio'}
+
+outputs:
+- {name: train_csv, type: CSV, description: 'Train Dataset'}
+- {name: test_csv, type: CSV, description: 'Test Dataset'}
+
+implementation:
+  container:
+    image: bponieckiklotz/kfp-steps@sha256:9f3c7eaa9de901ef9b9bb53913388cbe9efeb162addb7efe77a219ca2f6e6008
+    command: [
+      python,
+      /app/main.py,
+      --input_file_path,
+      {inputPath: dataset_csv},
+      --ratio, 
+      {inputValue: ratio},
+      --train_output_path, 
+      {outputPath: train_csv},
+      --test_output_path,
+      {outputPath: test_csv}
+    ]
