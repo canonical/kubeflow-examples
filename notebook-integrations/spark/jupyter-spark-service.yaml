@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: <NOTEBOOK_NAME>-spark-svc
+  namespace: <NAMESPACE>
+spec:
+  selector:
+    notebook-name: <NOTEBOOK_NAME>
+  clusterIP: None
+  ports:
+  - name: notebook
+    port: 8888
+    targetPort: 8888
+  - name: comm
+    port: 37371
+    targetPort: 37371
+  - name: blockmngr
+    port: 6060
+    targetPort: 6060
