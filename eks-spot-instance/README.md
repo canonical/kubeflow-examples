@@ -1,6 +1,6 @@
 # Run Kubeflow Pipeline on EKS spot instance
 
-Start by create a EKS cluster and deploy Kubeflow on top of it.
+Start by creating a EKS cluster and deploy Kubeflow using Juju.
 
 Add spot instances using eksctl
 
