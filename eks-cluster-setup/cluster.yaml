@@ -30,7 +30,7 @@ managedNodeGroups:
   releaseVersion: ""
   ssh:
     allow: true
-    publicKeyName: dektop-eu-central-1
+    publicKeyName: {{ public_key_name }}
   tags:
     alpha.eksctl.io/nodegroup-name: ng-d06bd84e
     alpha.eksctl.io/nodegroup-type: managed
