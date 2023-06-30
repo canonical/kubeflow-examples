@@ -1,10 +1,8 @@
 # EKS Cluster setup
-This folder contains eksctl cluster config which can be used to deploy Charmed Kubeflow/ Charmed mlflow (?). 
-For information about deploying Charmed Mlflow, please refer to [this guide](https://discourse.charmhub.io/t/deploying-charmed-mlflow-v2-to-eks/10913).
+This folder contains an `eksctl` cluster config file which can be used to deploy Charmed Kubeflow or Charmed MLFlow. This config has some preset values which you might want/need to modify before deploying. Default values were set according to minimal requirements for deploying Charmed Kubeflow. For details on this, please refer to [this part of the guide](https://charmed-kubeflow.io/docs/create-eks-cluster-for-mlops#heading--deploy-eks-cluster).
 
-The cluster config has some preset values which you might want to check before deploying. e.g. (default values are minimal requirements for deploying Charmed Kubeflow):
-* The cluster will be deployed by default to `eu-central-1` zone. Feel free to edit `metadata.region` and `availabilityZones` according to your needs.
-* The cluster will be deployed with `t2.2xlarge` ec2 instance types for worker nodes. Feel free to edit `managedNodeGroups[0].instanceType`.
-* Each worker node will have gp2 disk of size 100Gb. Feel free to edit `managedNodeGroups[0].volumeSize`.
-* By default this template will enable you to ssh into ec2 worker nodes with ssh key speciffied in `{{ public_key_name }}` the key must exist before cluster creation and it also has to be in the same zone as the cluster (in this case `{{ public_key_name }}`). You can change the key name under `managedNodeGroups[0].ssh.publicKeyName` to any key you have.
-* This cluster will have 2 worker nodes. Feel free to edit the `maxSize` and `minSize` under `managedNodeGroups[0]` according to your needs.
+# Related Guides
+- For complete instructions on how to Create an EKS cluster using this config file, please refer to [this guide](https://charmed-kubeflow.io/docs/create-eks-cluster-for-mlops).
+- For information about deploying Charmed Kubeflow, please refer to [this guide](https://charmed-kubeflow.io/docs/deploy-charmed-kubeflow-to-eks).
+- For information about deploying Charmed MLFlow, please refer to [this guide](https://discourse.charmhub.io/t/deploying-charmed-mlflow-v2-to-eks/10913).
+- For information about deploying Charmed Kubeflow and MLFlow and then integrating them, please refer to [this guide](https://discourse.charmhub.io/t/deploying-charmed-mlflow-v2-and-kubeflow-to-eks/10973).
