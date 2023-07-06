@@ -16,7 +16,7 @@ kind: ClusterConfig
 kubernetesNetworkConfig:
   ipFamily: IPv4
 managedNodeGroups:
-- amiFamily: AmazonLinux2
+- amiFamily: Ubuntu2004
   iam:
     withAddonPolicies:
       ebs: true
