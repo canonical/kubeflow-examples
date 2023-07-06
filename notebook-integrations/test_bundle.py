@@ -1,4 +1,5 @@
 import logging
+from subprocess import run
 
 import pytest
 
@@ -42,7 +43,7 @@ def lightkube_client():
 
 
 @pytest.fixture(scope="module")
-def create_profile(ops_test: OpsTest, lightkube_client):
+def create_profile(lightkube_client):
     """Create Profile and handle cleanup at the end of the module tests."""
     resources = codecs.load_all_yaml(
         PROFILE_TEMPLATE_FILE.read_text(),
@@ -59,7 +60,7 @@ def create_profile(ops_test: OpsTest, lightkube_client):
 
 
 @pytest.mark.abort_on_fail
-async def test_create_profile(ops_test: OpsTest, lightkube_client, create_profile):
+async def test_create_profile(lightkube_client, create_profile):
     """Test Profile creation.
 
     This test relies on the create_profile fixture, which handles the Profile creation and
@@ -81,7 +82,7 @@ async def test_create_profile(ops_test: OpsTest, lightkube_client, create_profil
 
 
 @pytest.fixture(scope="module")
-def create_notebook(ops_test: OpsTest, lightkube_client):
+def create_notebook(lightkube_client):
     """Create Notebook and handle cleanup at the end of the module tests."""
     resources = codecs.load_all_yaml(
         NOTEBOOK_TEMPLATE_FILE.read_text(),
@@ -98,7 +99,7 @@ def create_notebook(ops_test: OpsTest, lightkube_client):
 
 
 @pytest.mark.abort_on_fail
-async def test_create_notebook(ops_test: OpsTest, lightkube_client, create_notebook):
+async def test_create_notebook(lightkube_client, create_notebook):
     """Test Notebook creation.
 
     This test relies on the create_notebook fixture, which handles the Notebook creation and
@@ -118,3 +119,35 @@ async def test_create_notebook(ops_test: OpsTest, lightkube_client, create_noteb
     assert notebook_created, f"Notebook {NAMESPACE}/{NOTEBOOK_NAME} not found!"
 
     assert_replicas(lightkube_client, NOTEBOOK_RESOURCE, NOTEBOOK_NAME, NAMESPACE)
+
+
+@pytest.mark.abort_on_fail
+async def test_copy_dir():
+    """Test copying the tests directory inside the Notebook server."""
+    assert not run(
+        [
+            "kubectl",
+            "-n",
+            NAMESPACE,
+            "cp",
+            TESTS_DIR,
+            f"svc/{NOTEBOOK_NAME}:~/{TESTS_DIR}"
+        ]
+    )
+
+
+@pytest.mark.abort_on_fail
+async def test_run_bundle_tests():
+    """Test copying the tests directory inside the Notebook server."""
+    assert not run(
+        [
+            "kubectl",
+            "-n",
+            NAMESPACE,
+            "exec",
+            "-it",
+            f"svc/{NOTEBOOK_NAME}:~/{TESTS_DIR}",
+            "--",
+            f"cd {TESTS_DIR} && pytest"
+        ]
+    )
