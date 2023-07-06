@@ -1,8 +1,8 @@
 import logging
+from pathlib import Path
 from subprocess import run
 
 import pytest
-
 from lightkube import ApiError, Client, codecs
 from lightkube.generic_resource import (
     create_global_resource,
@@ -14,9 +14,10 @@ from utils import assert_namespace_active, assert_replicas
 
 log = logging.getLogger(__name__)
 
-ASSETS_DIR = Path("tests") / "assets"
+ASSETS_DIR = Path("assets")
 NOTEBOOK_TEMPLATE_FILE = ASSETS_DIR / "test-notebook.yaml.j2"
 PROFILE_TEMPLATE_FILE = ASSETS_DIR / "test-profile.yaml.j2"
+TESTS_DIR=Path("integrations")
 
 NAMESPACE = "kf-test"
 PROFILE_RESOURCE = create_global_resource(
@@ -46,13 +47,14 @@ def lightkube_client():
 @pytest.fixture(scope="module")
 def create_profile(lightkube_client):
     """Create Profile and handle cleanup at the end of the module tests."""
-    resources = codecs.load_all_yaml(
-        PROFILE_TEMPLATE_FILE.read_text(),
-        context={"namespace": NAMESPACE},
+    resources = list(
+        codecs.load_all_yaml(
+            PROFILE_TEMPLATE_FILE.read_text(),
+            context={"namespace": NAMESPACE},
+        )
     )
-
-    for rsc in resources:
-        lightkube_client.create(rsc)
+    assert len(resources) == 1, f"Expected 1 Profile, got {len(resources)}!"
+    lightkube_client.create(resources[0])
 
     yield
 
@@ -70,14 +72,14 @@ async def test_create_profile(lightkube_client, create_profile):
     try:
         profile_created = lightkube_client.get(
             PROFILE_RESOURCE,
-            name=PROFILE_NAME,
+            name=NAMESPACE,
         )
     except ApiError as e:
         if e.status == 404:
             profile_created = False
         else:
             raise
-    assert profile_created, f"Profile {PROFILE_NAME} not found!"
+    assert profile_created, f"Profile {NAMESPACE} not found!"
     
     assert_namespace_active(lightkube_client, NAMESPACE)
 
@@ -85,13 +87,14 @@ async def test_create_profile(lightkube_client, create_profile):
 @pytest.fixture(scope="module")
 def create_notebook(lightkube_client):
     """Create Notebook and handle cleanup at the end of the module tests."""
-    resources = codecs.load_all_yaml(
-        NOTEBOOK_TEMPLATE_FILE.read_text(),
-        context={"notebook": NOTEBOOK_NAME},
+    resources = list(
+            codecs.load_all_yaml(
+            NOTEBOOK_TEMPLATE_FILE.read_text(),
+            context={"notebook": NOTEBOOK_NAME},
+        )
     )
-
-    for rsc in resources:
-        lightkube_client.create(rsc, namespace=NAMESPACE)
+    assert len(resources) == 1, f"Expected 1 Notebook, got {len(resources)}!"
+    lightkube_client.create(resources[0], namespace=NAMESPACE)
 
     yield
 
@@ -137,14 +140,17 @@ async def test_copy_dir():
     )
 
 
-@pytest.mark.abort_on_fail
-async def test_run_bundle_tests():
-    """Test copying the tests directory inside the Notebook server."""
-    # get Notebook Pod
-    pods = list(client.list(Pod, namespace=NAMESPACE, labels={"app": NOTEBOOK_NAME}))
+@pytest.fixture(scope="function")
+def notebook_pod(lightkube_client):
+    """Get Notebook Pod."""
+    pods = list(lightkube_client.list(Pod, namespace=NAMESPACE, labels={"app": NOTEBOOK_NAME}))
     assert len(pods) == 1, f"Expected 1 Pod corresponding to notebook {NOTEBOOK_NAME}"
-    pod = pods[0].metadata.name
+    return pods[0].metadata.name
 
+
+@pytest.mark.abort_on_fail
+async def test_run_bundle_tests(notebook_pod):
+    """Test copying the tests directory inside the Notebook server."""
     assert not run(
         [
             "kubectl",
@@ -152,7 +158,7 @@ async def test_run_bundle_tests():
             NAMESPACE,
             "exec",
             "-it",
-            f"{pod}:{TESTS_DIR}",
+            f"{notebook_pod}:{TESTS_DIR}",
             "--",
             "bash",
             "-c",

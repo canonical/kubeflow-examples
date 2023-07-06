@@ -28,9 +28,7 @@ def assert_namespace_active(
     ns = client.get(Namespace, namespace)
     phase = ns.status.phase
 
-    logger.info(
-        f"Waiting for namespace {namespace} to become 'Active': phase == {phase}"
-    )
+    logger.info(f"Waiting for namespace {namespace} to become 'Active': phase == {phase}")
     assert phase == "Active", f"Waited too long for namespace {namespace}!"
 
 
