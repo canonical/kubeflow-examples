@@ -9,6 +9,7 @@ from lightkube.generic_resource import (
     create_namespaced_resource,
     load_in_cluster_generic_resources,
 )
+from lightkube.resources.core_v1 import Pod
 from utils import assert_namespace_active, assert_replicas
 
 log = logging.getLogger(__name__)
@@ -139,6 +140,11 @@ async def test_copy_dir():
 @pytest.mark.abort_on_fail
 async def test_run_bundle_tests():
     """Test copying the tests directory inside the Notebook server."""
+    # get Notebook Pod
+    pods = list(client.list(Pod, namespace=NAMESPACE, labels={"app": NOTEBOOK_NAME}))
+    assert len(pods) == 1, f"Expected 1 Pod corresponding to notebook {NOTEBOOK_NAME}"
+    pod = pods[0].metadata.name
+
     assert not run(
         [
             "kubectl",
@@ -146,8 +152,10 @@ async def test_run_bundle_tests():
             NAMESPACE,
             "exec",
             "-it",
-            f"svc/{NOTEBOOK_NAME}:~/{TESTS_DIR}",
+            f"{pod}:{TESTS_DIR}",
             "--",
-            f"cd {TESTS_DIR} && pytest"
+            "bash",
+            "-c",
+            f"'cd {TESTS_DIR} && pytest'",
         ]
     )
