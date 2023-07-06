@@ -1,0 +1,96 @@
+name: Training
+inputs:
+- {name: file, type: parquet}
+outputs:
+- {name: Output, type: String}
+implementation:
+  container:
+    image: python:3.8.10
+    command:
+    - sh
+    - -c
+    - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+      'pandas' 'pyarrow' 'scikit-learn==1.2.2' 'mlflow==2.1.1' 'boto3' 'numpy<1.20'
+      || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+      'pandas' 'pyarrow' 'scikit-learn==1.2.2' 'mlflow==2.1.1' 'boto3' 'numpy<1.20'
+      --user) && "$0" "$@"
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp)
+      printf "%s" "$0" > "$program_path"
+      python3 -u "$program_path" "$@"
+    - |
+      def training(file_path):
+          import mlflow
+          import pandas as pd
+          from sklearn.linear_model import ElasticNet
+          from sklearn.metrics import classification_report
+          from sklearn.model_selection import train_test_split
+
+          df = pd.read_parquet(file_path)
+
+          target_column="quality"
+          train_x, test_x, train_y, test_y = train_test_split(
+              df.drop(columns=[target_column]),
+              df[target_column], test_size=.25,
+              random_state=1337, stratify=df[target_column]
+          )
+
+          mlflow.sklearn.autolog()
+          with mlflow.start_run(run_name="elastic_net_models") as run:
+              alpha =  0.5
+              l1_ratio =  0.5
+              lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
+              lr.fit(train_x, train_y)
+              model_dir = "model"
+              env = {
+                  "name": "mlflow-env",
+                  "channels": ["defaults"],
+                  "dependencies": [
+                      "python=3.8.10",
+                      "pip"],
+
+                  "pip":[
+                      "mlflow==2.1.1",
+                      "scikit-learn==0.23.2"
+                  ]
+              }
+              mlflow.sklearn.log_model(lr, model_dir, registered_model_name="wine-elasticnet", conda_env=env)
+              return f"{run.info.artifact_uri}/{model_dir}"
+
+      def _serialize_str(str_value: str) -> str:
+          if not isinstance(str_value, str):
+              raise TypeError('Value "{}" has type "{}" instead of str.'.format(
+                  str(str_value), str(type(str_value))))
+          return str_value
+
+      import argparse
+      _parser = argparse.ArgumentParser(prog='Training', description='')
+      _parser.add_argument("--file", dest="file_path", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
+      _parsed_args = vars(_parser.parse_args())
+      _output_files = _parsed_args.pop("_output_paths", [])
+
+      _outputs = training(**_parsed_args)
+
+      _outputs = [_outputs]
+
+      _output_serializers = [
+          _serialize_str,
+
+      ]
+
+      import os
+      for idx, output_file in enumerate(_output_files):
+          try:
+              os.makedirs(os.path.dirname(output_file))
+          except OSError:
+              pass
+          with open(output_file, 'w') as f:
+              f.write(_output_serializers[idx](_outputs[idx]))
+    args:
+    - --file
+    - {inputPath: file}
+    - '----output-paths'
+    - {outputPath: Output}

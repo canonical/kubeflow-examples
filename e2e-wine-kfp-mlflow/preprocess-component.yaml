@@ -1,0 +1,47 @@
+name: Preprocess
+inputs:
+- {name: file, type: CSV}
+outputs:
+- {name: output, type: parquet}
+implementation:
+  container:
+    image: python:3.9.15
+    command:
+    - sh
+    - -c
+    - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+      'pandas' 'pyarrow' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install
+      --quiet --no-warn-script-location 'pandas' 'pyarrow' --user) && "$0" "$@"
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp)
+      printf "%s" "$0" > "$program_path"
+      python3 -u "$program_path" "$@"
+    - |
+      def _make_parent_dirs_and_return_path(file_path: str):
+          import os
+          os.makedirs(os.path.dirname(file_path), exist_ok=True)
+          return file_path
+
+      def preprocess(
+          file_path,
+          output_file
+      ):
+          import pandas as pd
+          df = pd.read_csv(file_path, header=0, sep=";")
+          df.columns = [c.lower().replace(" ", "_") for c in df.columns]
+          df.to_parquet(output_file)
+
+      import argparse
+      _parser = argparse.ArgumentParser(prog='Preprocess', description='')
+      _parser.add_argument("--file", dest="file_path", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--output", dest="output_file", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
+      _parsed_args = vars(_parser.parse_args())
+
+      _outputs = preprocess(**_parsed_args)
+    args:
+    - --file
+    - {inputPath: file}
+    - --output
+    - {outputPath: output}

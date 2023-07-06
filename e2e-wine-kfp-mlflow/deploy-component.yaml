@@ -1,0 +1,77 @@
+name: Deploy
+inputs:
+- {name: model_uri, type: String, default: default_model_uri, optional: true}
+implementation:
+  container:
+    image: bponieckiklotz/seldon-deploy:0.1
+    command:
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp)
+      printf "%s" "$0" > "$program_path"
+      python3 -u "$program_path" "$@"
+    - |
+      def deploy(model_uri = "default_model_uri"):
+          import subprocess
+
+          with open("/tmp/manifest.yaml", "w") as f:
+              manifest = """
+      apiVersion: machinelearning.seldon.io/v1
+      kind: SeldonDeployment
+      metadata:
+        name: mlflow
+      spec:
+        name: wines
+        predictors:
+        - componentSpecs:
+          - spec:
+              containers:
+              - name: classifier
+                image: seldonio/mlflowserver:1.16.0
+                imagePullPolicy: Always
+                livenessProbe:
+                  initialDelaySeconds: 80
+                  failureThreshold: 200
+                  periodSeconds: 5
+                  successThreshold: 1
+                  httpGet:
+                    path: /health/ping
+                    port: http
+                    scheme: HTTP
+                readinessProbe:
+                  initialDelaySeconds: 80
+                  failureThreshold: 200
+                  periodSeconds: 5
+                  successThreshold: 1
+                  httpGet:
+                    path: /health/ping
+                    port: http
+                    scheme: HTTP
+          graph:
+            children: []
+            implementation: MLFLOW_SERVER
+            modelUri: """+model_uri+"""
+            envSecretRefName: seldon-init-container-secret
+            name: classifier
+          name: wine-super-model
+          replicas: 1
+              """
+              print(manifest)
+              f.write(manifest)
+
+          result = subprocess.call(["kubectl", "apply", "-f", "/tmp/manifest.yaml", "-n", "admin"])
+          assert result == 0
+
+      import argparse
+      _parser = argparse.ArgumentParser(prog='Deploy', description='')
+      _parser.add_argument("--model-uri", dest="model_uri", type=str, required=False, default=argparse.SUPPRESS)
+      _parsed_args = vars(_parser.parse_args())
+
+      _outputs = deploy(**_parsed_args)
+    args:
+    - if:
+        cond: {isPresent: model_uri}
+        then:
+        - --model-uri
+        - {inputValue: model_uri}
